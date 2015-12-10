@@ -21,6 +21,23 @@ var babelOptions = {
   resolveModuleSource: moduleResolve
 };
 
+function merge(original, updates) {
+  if (!updates || typeof updates !== 'object') {
+    return original;
+  }
+
+  var props = Object.keys(updates);
+  var prop;
+  var length = props.length;
+
+  for (var i = 0; i < length; i++) {
+    prop = props[i];
+    original[prop] = updates[prop];
+  }
+
+  return original;
+}
+
 function moduleResolve(child, name) {
   if (child.charAt(0) !== '.') { return child; }
 
@@ -48,7 +65,7 @@ var app = 'src';
 app = babel(pickFiles(app, {
   srcDir: '/',
   destDir: 'shopie'
-}), babelOptions);
+}), merge(babelOptions, {jsxPragma: 'm'});
 
 var specs = 'specs';
 
@@ -74,7 +91,8 @@ sourceTree = es3SafeRecast(mergeTrees(sourceTree));
 
 var appJs = concat(sourceTree, {
   inputFiles: ['libs/shim.js', 'shopie/**/*.js'],
-  outputFile: 'shopie.js'
+  outputFile: 'shopie.js',
+  sourceMapConfig: { enabled: env !== production }
 });
 
 if (env === 'production') {
@@ -98,7 +116,13 @@ var vendorFiles = concat(bower, {
     'bower/mithril/mithril' + extension,
     'bower/es6-promise/promise' + extension
   ],
+  sourceMapConfig: { enabled: env !== production },
   outputFile: 'vendor.js'
 });
 
+if (env === production) {
+  vendorFiles = uglifyJavaScript(vendorFiles, {
+
+  });
+}
 module.exports = mergeTrees([appJs, vendorFiles]);

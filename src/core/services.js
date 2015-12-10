@@ -1,132 +1,7 @@
 import {isArray} from '../utils/collections';
 
-var Service = (function () {
-  var uuid = 0;
-  var _defaults = ['require', 'exports', 'services'];
-  var FAILED = false;
-  var LOADED = true;
-
-  function Service(name, deps, callback) {
-    this.id = uuid++;
-    this.name = name;
-    this.deps = !deps.length && callback.length ? _defaults : deps;
-    this.callback = callback;
-    this.services = {
-      exports: {}
-    };
-    this._state = undefined;
-    this._require = undefined;
-    this._finalized = false;
-    this.hasExportsAsDep = false;
-  }
-
-  Service.prototype = {
-    exports: function (reifiedDeps) {
-      if (this._finalized) {
-        return this.services.exports;
-      } else {
-        let results = this.callback.apply(this, reifiedDeps);
-        if (!(this.hasExportsAsDep && result === undefined)) {
-          this.services.exports = result;
-        }
-        this._finalized = true;
-        return this.services.exports;
-      }
-    },
-
-    unsee: function () {
-      this._finalized = false;
-      this.services = {exports: {}};
-      this._state = undefined;
-    },
-
-    reify: function () {
-      var deps = this.deps,
-        length = deps.length,
-        reified = new Array(length),
-        dep, i;
-
-      for (i = 0; i < length; i++) {
-        dep = deps[i];
-        if (dep === 'exports') {
-          this.hasExportsAsDep = true;
-          reified[i] = this.module.exports;
-        } else if (dep === 'require') {
-          reified[i] = this._makeRequire();
-        } else if (dep === 'services') {
-          reified[i] = this.services;
-        } else {
-          reified[i] = findService(resolve(dep, this.name), this.name).services.exports;
-        }
-      }
-      return reified;
-    },
-
-    _makeRequire: function () {
-      var name = this.name;
-      return this._require || (this._require = function(dep) {
-        return require(resolve(dep, name));
-      });
-    },
-
-    build: function () {
-      if (this._state === FAILED) {
-        return;
-      }
-      this._state = FAILED;
-      this.exports(this.reify());
-      this._state = LOADED;
-    },
-
-    toString: function() {
-      return `<service: ${this.name}>`;
-    }
-  };
-
-  return Service;
-})();
-
-var serviceRegistry = {};
-
-export default function service(name, deps, callback) {
-  if (arguments.length < 2) {
-    throw new Error('an unsupported service definition');
-  }
-  if (!isArray(deps)) {
-    callback = deps;
-    deps     =  [];
-  }
-  serviceRegistry[name] = new Service(name, deps, callback);
-}
-
-function Alias(name) {
-  this.name = name;
-}
-
-service.alias = (path) => new Alias(path)
-
 function missingService(name, referrer) {
   throw new Error('Could not find service `' + name + '` imported from `' + referrer + '`');
-}
-
-export function require(name) {
-  return findService(name, '(require)').services.exports;
-}
-
-function findService(name, referrer) {
-  var mod = serviceRegistry[name];
-
-  while (mod && mod.callback instanceof Alias) {
-    name = mod.callback.name;
-    mod = serviceRegistry[name];
-  }
-
-  if (!mod) {
-    missingService(name, referrer);
-  }
-
-  mod.build();
-  return mod;
 }
 
 function resolve(child, name) {
@@ -152,12 +27,152 @@ function resolve(child, name) {
   return parentBase.join('/');
 }
 
-export var entries = serviceRegistry;
+var Service = (function () {
+  var uuid = 0;
+  var _defaults = ['require', 'exports', 'module'];
+  var FAILED = false;
+  var LOADED = true;
 
-export function unsee(moduleName) {
+  function Service(name, deps, callback) {
+    this.id = uuid++;
+    this.name = name;
+    this.deps = !deps.length && callback.length ? _defaults : deps;
+    this.callback = callback;
+    this.module = {
+      exports: {}
+    };
+    this._state = undefined;
+    this._require = undefined;
+    this._finalized = false;
+    this.hasExportsAsDep = false;
+  }
+
+  Service.prototype = {
+    exports: function (reifiedDeps) {
+      if (this._finalized) {
+        return this.module.exports;
+      } else {
+        let results = this.callback.apply(this, reifiedDeps);
+        if (!(this.hasExportsAsDep && results === undefined)) {
+          this.module.exports = results;
+        }
+        this._finalized = true;
+        return this.module.exports;
+      }
+    },
+
+    unsee: function () {
+      this._finalized = false;
+      this.module = {exports: {}};
+      this._state = undefined;
+    },
+
+    build: function (reifieds) {
+      if (this._state === FAILED) {
+        return;
+      }
+      this._state = FAILED;
+      this.exports(reifieds);
+      this._state = LOADED;
+    },
+
+    reified: function () {
+      var deps = module.deps,
+      length = deps.length,
+      reified = new Array(length),
+      dep, i;
+      var _requireCallback = (dep) => this.require(resolve(dep, module.name))
+      for (i = 0; i < length; i++) {
+        dep = deps[i];
+        if (dep === 'exports') {
+          module.hasExportsAsDep = true;
+          reified[i] = module.module.exports;
+        } else if (dep === 'require') {
+          reified[i] = _requireCallback;
+        } else if (dep === 'module') {
+          reified[i] = module.module;
+        } else {
+          reified[i] = this.findService(resolve(dep, module.name), module.name).module.exports;
+        }
+      }
+      return reified;
+    },
+
+    toString: function() {
+      return `<service: ${this.name}>`;
+    }
+  };
+
+  return Service;
+})();
+
+function Alias(name) {
+  this.name = name;
+}
+
+export default function Container() {
+  this.registry = Object.create(null);
+}
+
+Container.prototype.register = function (name, deps, callback) {
+  if (arguments.length < 2) {
+    throw new Error('an unsupported service definition');
+  }
+  if (!isArray(deps)) {
+    callback = deps;
+    deps     =  [];
+  }
+  this.registry[name] = new Service(name, deps, callback);
+};
+
+Container.prototype.alias = (path) => new Alias(path)
+
+Container.prototype.require = function (name) {
+  return this.findService(name, '(require)').module.exports;
+};
+
+Container.prototype.findService = function (name, referrer) {
+  var mod = this.registry[name];
+
+  while (mod && mod.callback instanceof Alias) {
+    name = mod.callback.name;
+    mod = this.registry[name];
+  }
+
+  if (!mod) {
+    missingService(name, referrer);
+  }
+
+  mod.build(this._buildParams(mod));
+  return mod;
+};
+
+Container.prototype._buildParams = function (module) {
+  var deps = module.deps,
+    length = deps.length,
+    reified = new Array(length),
+    dep, i;
+  var _requireCallback = (dep) => this.require(resolve(dep, module.name))
+  for (i = 0; i < length; i++) {
+    dep = deps[i];
+    if (dep === 'exports') {
+      module.hasExportsAsDep = true;
+      reified[i] = module.module.exports;
+    } else if (dep === 'require') {
+      reified[i] = _requireCallback;
+    } else if (dep === 'module') {
+      reified[i] = module.module;
+    } else {
+      reified[i] = this.findService(resolve(dep, module.name), module.name).module.exports;
+    }
+  }
+  return reified;
+};
+
+Container.prototype.unsee = function (moduleName) {
   return findService(moduleName).unsee();
-}
+};
 
-export function clear() {
-  entries = serviceRegistry = {};
-}
+Container.prototype.clear = function clear() {
+  this.registry = Object.create(null);
+};
