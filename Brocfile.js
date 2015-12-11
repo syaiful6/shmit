@@ -90,9 +90,9 @@ if (env !== 'production') {
 sourceTree = es3SafeRecast(mergeTrees(sourceTree));
 
 var appJs = concat(sourceTree, {
-  inputFiles: ['libs/shim.js', 'shopie/**/*.js'],
+  inputFiles: ['libs/**/*.js', 'shopie/**/*.js'],
   outputFile: 'shopie.js',
-  sourceMapConfig: { enabled: env !== production }
+  sourceMapConfig: { enabled: env !== 'production' }
 });
 
 if (env === 'production') {

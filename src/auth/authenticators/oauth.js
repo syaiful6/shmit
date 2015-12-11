@@ -1,4 +1,4 @@
-import request from 'shopie/utils/request';
+import request, { urlFormEncode } from 'shopie/utils/request';
 import { merge } from 'shopie/utils/collections';
 import { customEvent } from 'shopie/utils/event';
 
@@ -91,7 +91,7 @@ OauthAuthenticator.prototype = {
       clientSecret = this.clientSecret;
       config = {
         method: 'POST',
-        data: new FormData(data),
+        data: urlFormEncode(data),
         headers: {
           "Content-Type": "application/x-www-form-urlencoded",
           "Accept": "application/json"
