@@ -125,7 +125,7 @@ Container.prototype.register = function (name, deps, callback) {
   this.registry[name] = new Service(name, deps, callback);
 };
 
-Container.prototype.alias = (path) => new Alias(path)
+Container.prototype.register.alias = (path) => new Alias(path)
 
 Container.prototype.require = function (name) {
   return this.findService(name, '(require)').module.exports;

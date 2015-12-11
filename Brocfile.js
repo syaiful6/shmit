@@ -11,6 +11,10 @@ var babel = require('broccoli-babel-transpiler'),
   findBowerTrees = require('broccoli-bower'),
   env = require('broccoli-env').getEnv(),
   concat = require('broccoli-sourcemap-concat'),
+  myth = require('broccoli-myth'),
+  path = require('path'),
+  escapeChar     = process.platform.match(/^win/) ? '^' : '\\',
+  cwd            = process.cwd().replace(/( |\(|\))/g, escapeChar + '$1'),
   extension = env === 'production' ? '.min.js' : '.js';
 
 var babelOptions = {
@@ -65,7 +69,9 @@ var app = 'src';
 app = babel(pickFiles(app, {
   srcDir: '/',
   destDir: 'shopie'
-}), merge(babelOptions, {jsxPragma: 'm'});
+}), merge(babelOptions, {jsxPragma: 'm'}));
+
+app = es3SafeRecast(app);
 
 var specs = 'specs';
 
@@ -81,18 +87,20 @@ vendor = pickFiles(vendor, {
   destDir: 'libs'
 });
 
+
 var sourceTree = [app, vendor];
 
 if (env !== 'production') {
   sourceTree.push(specs);
 }
 
-sourceTree = es3SafeRecast(mergeTrees(sourceTree));
+sourceTree = mergeTrees(sourceTree);
 
 var appJs = concat(sourceTree, {
-  inputFiles: ['libs/shim.js', 'shopie/**/*.js'],
+  inputFiles: ['shopie/**/*.js'],
   outputFile: 'shopie.js',
-  sourceMapConfig: { enabled: env !== production }
+  sourceMapConfig: { enabled: env !== 'production' },
+  headerFiles: ['libs/shim.js']
 });
 
 if (env === 'production') {
@@ -109,20 +117,36 @@ bower = pickFiles(bower, {
   destDir: 'bower'
 });
 
-var vendorFiles = concat(bower, {
+var vendorTree = concat(bower, {
   inputFiles: [
-    'bower/es5-shim/es5-shim' + extension,
     'bower/loader.js/loader.js',
+    'bower/es5-shim/es5-shim' + extension,
     'bower/mithril/mithril' + extension,
     'bower/es6-promise/promise' + extension
   ],
-  sourceMapConfig: { enabled: env !== production },
+  sourceMapConfig: { enabled: env !== 'production' },
   outputFile: 'vendor.js'
 });
 
-if (env === production) {
-  vendorFiles = uglifyJavaScript(vendorFiles, {
+if (env === 'production') {
+  vendorTree = uglifyJavaScript(vendorTree, {
 
   });
 }
-module.exports = mergeTrees([appJs, vendorFiles]);
+
+var styles = 'src/styles';
+styles = myth(pickFiles(styles, {
+  srcDir: '/',
+  files: ['app.css']
+}), {
+  source: path.resolve(cwd, 'src/styles/app.css'),
+  inputFile: 'app.css',
+  outputFile: 'app.css',
+  compress: env === 'production'
+});
+
+var rename = stew.rename;
+
+styles = rename(styles, 'app', 'shopie');
+
+module.exports = mergeTrees([appJs, vendorTree, styles]);

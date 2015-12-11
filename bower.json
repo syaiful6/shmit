@@ -20,7 +20,8 @@
   "dependencies": {
     "mithril": "~0.2.0",
     "es6-promise": "~3.0.2",
+    "loader.js": "3.4.0",
     "es5-shim": "~4.3.1",
-    "loader.js": "3.4.0"
+    "normalize-css": "normalize.css#~3.0.3"
   }
 }
