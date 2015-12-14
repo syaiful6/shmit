@@ -100,7 +100,8 @@ var appJs = concat(sourceTree, {
   inputFiles: ['shopie/**/*.js'],
   outputFile: 'shopie.js',
   sourceMapConfig: { enabled: env !== 'production' },
-  headerFiles: ['libs/shim.js']
+  headerFiles: ['libs/shim.js'],
+  footerFiles: ['libs/start.js']
 });
 
 if (env === 'production') {
@@ -117,16 +118,25 @@ bower = pickFiles(bower, {
   destDir: 'bower'
 });
 
+var babelPath = require.resolve('broccoli-babel-transpiler');
+babelPath = babelPath.replace(/\/index.js$/, '');
+babelPath += '/node_modules/babel-core';
+
+var browserPolyfill = funnel(babelPath, {
+  files: ['browser-polyfill.js']
+});
+
 var vendorTree = concat(bower, {
   inputFiles: [
     'bower/loader.js/loader.js',
-    'bower/es5-shim/es5-shim' + extension,
     'bower/mithril/mithril' + extension,
     'bower/es6-promise/promise' + extension
   ],
   sourceMapConfig: { enabled: env !== 'production' },
   outputFile: 'vendor.js'
 });
+
+vendorTree = mergeTrees([browserPolyfill, vendorTree]);
 
 if (env === 'production') {
   vendorTree = uglifyJavaScript(vendorTree, {
