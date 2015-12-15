@@ -30,7 +30,7 @@ if (!Array.isArray) {
 export var isArray = _isArray;
 
 var Vertex = (function () {
-  function Vertex () {
+  function Vertex (name) {
     this.name = name;
     this.incoming = {};
     this.incomingNames = [];

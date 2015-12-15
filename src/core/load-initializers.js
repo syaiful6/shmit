@@ -15,6 +15,7 @@ export default function (app, prefix) {
     if (!initializer.name) {
       initializer.name = moduleName;
     }
+
     app.addInitializer(initializer);
   })
 };

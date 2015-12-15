@@ -1,6 +1,7 @@
 import BaseComponent from '../component';
 import inherits from '../../utils/inherits';
-import addEvent from '../../utils/event';
+import iter from '../../utils/itertools';
+import {cancelEventPropagation} from '../../utils/event';
 
 function addClass (elem, className) {
   var splitted = className.split(' ');
@@ -23,19 +24,11 @@ function removeClass (elem, className) {
   }
 }
 
-function eachNode(node, callback, context) {
-  var i, len;
-  for (i = 0, len = node.length; i < len; i++) {
-    callback.call(context, node[i], i);
-  }
-}
-
 export default function AppModal () {
   BaseComponent.apply(this, arguments);
   // the modal to show
   this.component = null;
   this._showing = false;
-  this._attachListener = false;
 }
 
 inherits(AppModal, BaseComponent);
@@ -43,7 +36,7 @@ inherits(AppModal, BaseComponent);
 AppModal.prototype.view = function() {
   return (
     <div className="modal-application">
-      <div className="modal-container js-modal-container">
+      <div className="modal-container js-modal-container" onclick={this.close.bind(this)}>
         {this.component && this.component.render()}
       </div>
       <div className="modal-background js-modal-background"></div>
@@ -61,41 +54,38 @@ AppModal.prototype.config = function (isInitialized, context) {
 AppModal.prototype.show = function (component) {
   clearTimeout(this._hideTimeout);
 
-  this._showing = true
+  this._showing = true;
+  component.close = this.close.bind(this);
   this.component = component;
 
   var container = this.querySelectorAll('.js-modal-container, .js-modal-background');
-  if (!this._attachListener) {
-    var elem = this.querySelectorAll();
-    if (elem) {
-      addEvent(elem, 'sh-modal:hide', this.close.bind(this));
-    }
-    this._attachListener = true;
-  }
 
-  eachNode(container, function (item) {
-    removeClass(item, 'fade-out');
-    addClass(item, 'fade-in open');
-  });
+  for (let elem of iter(container)) {
+    addClass(elem, 'fade-in open');
+  }
 
   m.redraw(true);
   this.onready();
 };
 
-AppModal.prototype.close = function () {
+AppModal.prototype.close = function (e) {
   if (! this._showing) {
     return;
   }
-  var container = this.querySelectorAll('.js-modal-container, .js-modal-background');
-  eachNode(container, function (item) {
-    removeClass(item, 'fade-in');
-    addClass(item, 'fade-out');
-  });
+  cancelEventPropagation(e);
+  var container = this.querySelectorAll('.js-modal-container, .js-modal-background'),
+    elem;
+
+  for (elem of iter(container)) {
+    removeClass(elem, 'fade-in');
+    addClass(elem, 'fade-out');
+  }
 
   this._hideTimeout = setTimeout(() => {
-    eachNode(container, function (item) {
-      removeClass(item, 'open');
-    });
+    for (elem of iter(container)) {
+      removeClass(elem, 'fade-out open');
+    }
+
     this._showing = false;
     this.component = null;
     m.redraw(true);

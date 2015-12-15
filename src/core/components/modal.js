@@ -1,6 +1,6 @@
 import BaseComponent from '../component';
 import inherits from '../../utils/inherits';
-import addEvent, {customEvent, cancelEventPropagation} from '../../utils/event';
+import {cancelEventPropagation} from '../../utils/event';
 
 export default function Modal () {
   BaseComponent.apply(this, arguments);
@@ -15,13 +15,13 @@ Modal.prototype.view = function () {
 
   return (
     <article className={this.className()}>
-      <section className="modal-content">
+      <section className="modal-content" onclick={this.noBuble.bind(this)}>
         <header class="modal-header">
           <h1>{this.title()}</h1>
         </header>
         {props.showClose ?
-          <a className="close icon-x" href="" title="Close" onclick={this.hide.bind(this)}>
-            <span className="no-hide">Close</span></a> : ''}
+          <a className="close icon-x" href="" title="Close">
+            <span className="hidden">Close</span></a> : ''}
         <section class="modal-body">
           {this.content()}
         </section>
@@ -32,12 +32,10 @@ Modal.prototype.view = function () {
   );
 };
 
-Modal.prototype.hide = function (e) {
+Modal.prototype.noBuble = function(e) {
   cancelEventPropagation(e);
-  e.preventDefault();
-  var modalHide = customEvent('sh-modal:hide');
-  this.parentSelector.dispatchEvent(modalHide);
-};
+  return false;
+}
 
 Modal.prototype.title = function () {
 

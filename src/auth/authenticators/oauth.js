@@ -1,6 +1,6 @@
 import request, { urlFormEncode } from 'shopie/utils/request';
 import { merge } from 'shopie/utils/collections';
-import { customEvent } from 'shopie/utils/event';
+import signal from '../signal';
 
 function normalizeExpirationTime(expiresIn) {
   if (expiresIn) {
@@ -37,19 +37,18 @@ OauthAuthenticator.prototype = {
     });
   },
 
-  authenticate: function(username, password, scope = []) {
+  authenticate: function(username, password, scope = ['read', 'write']) {
     return new Promise((resolve, reject) => {
       let data = {
         'grant_type': 'password',
-        username: identification,
+        username,
         password
       },
-        endpoint = this.tokenEndpoint,
-        scope = scope.join(' ');
+        endpoint = this.tokenEndpoint;
       if (scope) {
-        data.scope = scope;
+        data.scope = scope.join(' ');
       }
-      this.makeRequest(url, data).then((response) => {
+      this.makeRequest(endpoint, data).then((response) => {
         let expired = normalizeExpirationTime(response['expires_in']);
         this._scheduleRefreshToken(response['expires_in'], expired,
           response['refresh_token']
@@ -59,7 +58,7 @@ OauthAuthenticator.prototype = {
         }
         resolve(response);
       }, (err) => reject(err));
-    })
+    });
   },
 
   invalidate: function (data) {
@@ -88,7 +87,7 @@ OauthAuthenticator.prototype = {
 
   makeRequest: function (url, data) {
     var clientId = this.clientId,
-      clientSecret = this.clientSecret;
+      clientSecret = this.clientSecret,
       config = {
         method: 'POST',
         data: urlFormEncode(data),
@@ -143,7 +142,6 @@ OauthAuthenticator.prototype = {
   },
 
   _dispatchSessionEvent: function (data) {
-    var event = customEvent('session:updated', {data});
-    window.dispatchEvent(event);
+    signal.send('authenticator:updated', data);
   }
 };

@@ -1,35 +1,38 @@
-function iter(iterable) {
+export default function iter(iterable) {
   if (iterable.next || iterable.done) {
     return iterable;
   }
-  var i = 0;
-  return {
-    [Symbol.iterator]: function() {
-      return {
-        next() {
-          var done = i >= iterable.length;
-          return {value: done ? null: iterable[i++], done};
-        }
-      };
-    }
+  var i = 0,
+    results ={};
+  if (iterable.toString() === '[object Object]') {
+    iterable = Object.keys(iterable);
+  }
+  results[Symbol.iterator] = function () {
+    return {
+      next() {
+        var done = i >= iterable.length;
+        return {value: done ? void 0: iterable[i++], done};
+      }
+    };
   };
+  return results;
 }
 
-function range(start, end, step) {
+export function range(start, end, step) {
   if (end == null) {
     end = start;
     start = 0;
   }
   if (start === end) {
-    return {
-      [Symbol.iterator]: function () {
-        return {
-          next() {
-            return {done: true};
-          }
-        };
+    let results = {};
+    results[Symbol.iterator] = function () {
+      return {
+        next() {
+          return {done: true};
+        }
       }
-    };
+    }
+    return results;
   } else if (start < end) {
     if (step == null) {
       step = 1;
@@ -38,17 +41,18 @@ function range(start, end, step) {
       throw new Error(`${start} is < ${end}, so step must be positive`);
     }
     var i = start - step;
-    return {
-      [Symbol.iterator]: function () {
-        return {
+
+    let results = {};
+    results[Symbol.iterator] = function () {
+      return {
           next() {
             i += step;
             var done = i >= end;
             return {value: done ? null : i, done};
           }
-        };
-      }
+      };
     };
+    return results;
   } else {
     if (step == null) {
       step = -1;
@@ -57,21 +61,21 @@ function range(start, end, step) {
       throw new Error(`${start} is > ${end}, so step must be negative`);
     }
     var i = start - step;
-    return {
-      [Symbol.iterator]: function () {
-        return {
-          next() {
-            i += step;
-            var done = i <= end;
-            return {value: done ? null : i, done};
-          }
-        };
-      }
-    };
+    let results = {};
+    results[Symbol.iterator] = function () {
+      return {
+        next() {
+          i += step;
+          var done = i <= end;
+          return {value: done ? null : i, done};
+        }
+      };
+    }
+    return results;
   }
 }
 
-function zip(...iterables) {
+export function zip(...iterables) {
   var iterators = iterables.map((item) => {
     let it = iter(item);
     if (it[Symbol.iterator]) {
@@ -93,14 +97,15 @@ function zip(...iterables) {
       }
       return results;
     };
-  return {
-    [Symbol.iterator]: function() {
-      return {
-        next()  {
-          let val = take();
-          return {value: done ? null: val, done};
-        }
-      };
+
+  let results = {};
+  results[Symbil.iterator] = function ()  {
+    return {
+      next() {
+        let value = take();
+        return {value: done ? void 0 : val, done};
+      }
     }
   };
+  return results;
 }

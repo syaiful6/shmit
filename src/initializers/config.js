@@ -1,5 +1,27 @@
 var repositories = {};
 
+function mapType(val) {
+  var e;
+  if (val === '') {
+    return null;
+  } else if (val === 'true') {
+    return true;
+  } else if (val === 'false') {
+    return false;
+  } else if (!isNaN(val)) {
+    return +val;
+  } else if (val.indexOf('{') === 0) {
+    try {
+      return JSON.parse(val);
+    } catch (_error) {
+      e = _error;
+      return val;
+    }
+  } else {
+    return val;
+  }
+}
+
 export default {
   name: 'application-configs:main',
   initialize(app) {
@@ -10,12 +32,12 @@ export default {
       // walk over this node list
       for (i = 0; i < len; i++) {
         config = metaConfigs[i];
-        key = config.name;
+        name = config.name;
         value = config.value;
-        propertyName = key.substring(4);
+        propertyName = name.substring(4);
         repositories[propertyName] = mapType(value);
       }
     }
-    app.services.configs = repositories;
+    app.register('configs', repositories);
   }
 };

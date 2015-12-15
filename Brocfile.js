@@ -69,7 +69,7 @@ var app = 'src';
 app = babel(pickFiles(app, {
   srcDir: '/',
   destDir: 'shopie'
-}), merge(babelOptions, {jsxPragma: 'm'}));
+}), merge(babelOptions, {jsxPragma: 'm', optional: ['es7.decorators']}));
 
 app = es3SafeRecast(app);
 
@@ -119,24 +119,27 @@ bower = pickFiles(bower, {
 });
 
 var babelPath = require.resolve('broccoli-babel-transpiler');
-babelPath = babelPath.replace(/\/index.js$/, '');
-babelPath += '/node_modules/babel-core';
+babelPath = babelPath.split(path.sep);
+babelPath.pop();
+babelPath = babelPath.join('/')
+babelPath +='/node_modules/babel-core';
 
-var browserPolyfill = funnel(babelPath, {
+var browserPolyfill = pickFiles(babelPath, {
   files: ['browser-polyfill.js']
 });
 
-var vendorTree = concat(bower, {
+var vendorTree = mergeTrees([browserPolyfill, bower]);
+
+var vendorTree = concat(vendorTree, {
   inputFiles: [
+    'bower/es6-promise/promise' + extension,
+    'browser-polyfill.js',
     'bower/loader.js/loader.js',
-    'bower/mithril/mithril' + extension,
-    'bower/es6-promise/promise' + extension
+    'bower/mithril/mithril' + extension
   ],
   sourceMapConfig: { enabled: env !== 'production' },
   outputFile: 'vendor.js'
 });
-
-vendorTree = mergeTrees([browserPolyfill, vendorTree]);
 
 if (env === 'production') {
   vendorTree = uglifyJavaScript(vendorTree, {

@@ -1,6 +1,6 @@
 import { DAGMap } from '../utils/collections';
 import addEvent from '../utils/event';
-
+import {range} from '../utils/itertools';
 /**
 * this is likely just a way for us to manage app state.
 *
@@ -9,7 +9,7 @@ export default (function () {
   function Application() {
     this.initializers = [];
     this._booted = false;
-    this.services = {};
+    this.services = [];
   }
 
   /**
@@ -49,9 +49,6 @@ export default (function () {
   */
   Application.prototype.runInitializer = function () {
     this._runInitializer((name, initializer) => {
-      if (!!name) {
-        throw new Error('No application initializer named' + name);
-      }
       initializer.initialize(this);
     });
     this._booted = true;
@@ -82,7 +79,24 @@ export default (function () {
     }
 
     graph.topsort((vertex) => callback(vertex.name, vertex.value));
-
+    this.initializers = []; // already initialize, clear it
   };
+
+  Application.prototype.register = function (name, service) {
+    this.services.push([name, service]);
+  };
+
+  Application.prototype.lookup = function (name) {
+    var services = this.services,
+      index;
+    for (index of range(services.length)) {
+      let [registered, service] = services[index];
+      if (registered === name) {
+        return service;
+      }
+    }
+    throw new Error('no service named ' + name);
+  };
+
   return Application;
 })();

@@ -6,9 +6,9 @@ export default {
   after: 'application-configs:main',
   initialize(app) {
     m.startComputation();
-    app.modal = m.mount(document.getElementById('sh-modal'), AppModal.component())
-    m.mount(document.getElementById('main-header-top'), Navigation.component({modal: app.modal}));
-
+    var modal = m.mount(document.getElementById('sh-modal'), AppModal.component())
+    m.mount(document.getElementById('main-header-top'), Navigation.component({modal}));
+    app.register('modal', modal);
     m.endComputation();
   }
 };
