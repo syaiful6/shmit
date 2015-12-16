@@ -3,27 +3,6 @@ import inherits from '../../utils/inherits';
 import iter from '../../utils/itertools';
 import {cancelEventPropagation} from '../../utils/event';
 
-function addClass (elem, className) {
-  var splitted = className.split(' ');
-  if (elem.classList) {
-    splitted.forEach((item) => elem.classList.add(item));
-  } else {
-    elem.className += ' ' + className;
-  }
-}
-
-function removeClass (elem, className) {
-  var splitted = className.split(' ');
-  if (elem.classList) {
-    splitted.forEach((item) => elem.classList.remove(item));
-  } else {
-    var classNames = elem.className.split(' ');
-    elem.className = classNames.filter((item) => {
-      return splitted.indexOf(item) === -1;
-    }).join(' ');
-  }
-}
-
 export default function AppModal () {
   BaseComponent.apply(this, arguments);
   // the modal to show
@@ -34,12 +13,18 @@ export default function AppModal () {
 inherits(AppModal, BaseComponent);
 
 AppModal.prototype.view = function() {
+  let containerClass = "modal-container js-modal-container",
+    backGroundClass = "modal-background js-modal-background";
+  if (this._showing) {
+    backGroundClass += "fade-in open";
+    containerClass += "fade-in open";
+  }
   return (
     <div className="modal-application">
-      <div className="modal-container js-modal-container" onclick={this.close.bind(this)}>
+      <div className={containerClass} onclick={this.close.bind(this)}>
         {this.component && this.component.render()}
       </div>
-      <div className="modal-background js-modal-background"></div>
+      <div className={backGroundClass}></div>
     </div>
   );
 };
@@ -58,12 +43,6 @@ AppModal.prototype.show = function (component) {
   component.close = this.close.bind(this);
   this.component = component;
 
-  var container = this.querySelectorAll('.js-modal-container, .js-modal-background');
-
-  for (let elem of iter(container)) {
-    addClass(elem, 'fade-in open');
-  }
-
   m.redraw(true);
   this.onready();
 };
@@ -73,19 +52,8 @@ AppModal.prototype.close = function (e) {
     return;
   }
   cancelEventPropagation(e);
-  var container = this.querySelectorAll('.js-modal-container, .js-modal-background'),
-    elem;
-
-  for (elem of iter(container)) {
-    removeClass(elem, 'fade-in');
-    addClass(elem, 'fade-out');
-  }
 
   this._hideTimeout = setTimeout(() => {
-    for (elem of iter(container)) {
-      removeClass(elem, 'fade-out open');
-    }
-
     this._showing = false;
     this.component = null;
     m.redraw(true);

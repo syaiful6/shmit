@@ -1,4 +1,5 @@
 import signal from './signal';
+import computation from '../core/decorators';
 
 export default class Session {
 
@@ -55,28 +56,31 @@ export default class Session {
     });
   }
 
-  _changeState(content) {
+  @computation
+  _changeState(content, trigger) {
+    trigger = !!trigger && !this.isAuthenticated;
     this._state.authenticated = content;
     this.isAuthenticated = true;
     this.store.persist(this._state);
     if (!this._connected) {
       this._connectToAuthenticatorEvent();
     }
+    if (trigger) {
+      signal.send('authenticated');
+    }
   }
 
-  _clearState() {
+  @computation
+  _clearState(trigger) {
+    trigger = !!trigger && this.isAuthenticated;
     this.isAuthenticated = false;
     this._state.authenticated = {};
     this.store.persist(this._state);
   }
 
-  _storageUpdate(content) {
-    this._state = content;
-  }
-
   _connectToAuthenticatorEvent() {
     signal.connect('authenticator:updated', this._changeState, this);
-    signal.connect('authenticator:invalidated', this._clearState, this);
+    signal.connect('authenticator:invalidated', this._clearState.bind(this, true));
   }
 
   _connectToStorage() {

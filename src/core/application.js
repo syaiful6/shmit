@@ -1,6 +1,8 @@
 import { DAGMap } from '../utils/collections';
 import addEvent from '../utils/event';
 import {range} from '../utils/itertools';
+
+var hasProp = {}.hasOwnProperty;
 /**
 * this is likely just a way for us to manage app state.
 *
@@ -9,7 +11,9 @@ export default (function () {
   function Application() {
     this.initializers = [];
     this._booted = false;
+    this.routes = {};
     this.services = [];
+    this.basePath = '/';
   }
 
   /**
@@ -83,19 +87,39 @@ export default (function () {
   };
 
   Application.prototype.register = function (name, service) {
-    this.services.push([name, service]);
+    this.services[name] = service;
   };
 
   Application.prototype.lookup = function (name) {
     var services = this.services,
-      index;
-    for (index of range(services.length)) {
-      let [registered, service] = services[index];
-      if (registered === name) {
-        return service;
+      serviceName;
+
+    for (serviceName in services) {
+      if (!hasProp.call(services, serviceName)) {
+        continue;
+      }
+      if (serviceName === name) {
+        return services[serviceName];
       }
     }
     throw new Error('no service named ' + name);
+  };
+
+  Application.prototype.mapRoutes = function () {
+    let routes = this.routes,
+      map = {},
+      route;
+    for (route in routes) {
+      if (!hasProp.call(routes, route)) {
+        continue;
+      }
+      route = routes[route];
+      if (route.component) {
+        route.component.props.routeName = key;
+      }
+      map[this.basePath + route.path] = route.component;
+    }
+    return map;
   };
 
   return Application;

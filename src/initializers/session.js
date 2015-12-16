@@ -13,10 +13,6 @@ export default {
     	session = new Session(authenticator, storage);
 
     app.register('session', session);
-    session.restore().then(() => {
-      m.endComputation();
-    }, () => {
-      m.endComputation();
-    });
+    session.restore();
   }
 };
