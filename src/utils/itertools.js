@@ -1,3 +1,5 @@
+import {reduce} from './functools';
+
 var _isArray;
 
 if (!Array.isArray) {
@@ -8,7 +10,7 @@ if (!Array.isArray) {
   _isArray = Array.isArray;
 }
 
-export default function iter(iterable) {
+export function iter(iterable) {
   if (iterable[Symbol.iterator]) {
     return iterable;
   }
@@ -58,7 +60,7 @@ export function enumerate(iterable, start = 0) {
 }
 
 export function toArray(iterable) {
-  if (isArray(iterable)) {
+  if (_isArray(iterable)) {
     return iterable;
   }
   return (function () {
@@ -331,8 +333,9 @@ export function combinations(iterable, r = null) {
       let loop, exhausted, i, j;
       loop = exhausted = false;
       for (i of toArray(range(r)).reverse()) {
-        if (indices[i] != i + n - r) {
+        if (indices[i] !== i + n - r) {
           loop = true;
+          break;
         }
       }
       if (loop === exhausted) {
@@ -350,4 +353,137 @@ export function combinations(iterable, r = null) {
     }
   };
   return results;
+}
+
+export function product(list, repeat = 1) {
+  let results = {};
+  results[Symbol.iterator] = function *(argument) {
+    var pools = [];
+    for (let it of list) {
+      pools.push(toArray(it));
+    }
+    pools = multiple(pools, repeat);
+    var prod = reduce(function(a, b) {
+      var ret = [];
+      a.forEach(function(a) {
+        b.forEach(function(b) {
+          ret.push(a.concat([b]));
+        });
+      });
+      return ret;
+    }, pools, [[]]);
+    for (let ret of prod) {
+      yield ret;
+    }
+  };
+  return results;
+}
+
+export function permutations(iterable, r=null) {
+  let results = {};
+  results[Symbol.iterator] = function *() {
+    var pool = toArray(iterable),
+      n = pool.length;
+      r = r !== null ? r: n;
+    for (let indices of product([range(n)], r)) {
+      let set = new Set(indices);
+      if (set.size === r) {
+        let results = (function () {
+          let ret = [];
+          for (let i of indices) {
+            ret.push(pool[i]);
+          }
+          return ret;
+        })();
+        yield results;
+      }
+    }
+  }
+  return results;
+}
+
+export function multiple(iterable, many = 2) {
+  var results = {};
+  results[Symbol.iterator] = function *() {
+    var iterable = toArray(iterable),
+      limit = many * iterable.length;
+    for (let [index, elem] of enumerate(cycle(iterable), 1)) {
+      if (index < limit) {
+        break;
+      }
+      yield elem;
+    }
+  };
+  return results;
+}
+
+export function tee(iterable, n=2) {
+  var iterator = iter(iterable)[Symbol.iterator]();
+  var deques  = (function () {
+    var results = [];
+    for (let i of range(n)) {
+      results.push([]);
+    }
+    return results;
+  })();
+  function* gen(queue) {
+    while (true) {
+      if (!queue.length) {
+        var item = iterator.next();
+        if (item.done) {
+          return;
+        }
+        for (let d of deques) {
+          d.push(item.value);
+        }
+      }
+      yield queue.shift();
+    }
+  }
+  var results = [];
+  for (let d of deques) {
+    results.push(gen(d));
+  }
+  return results;
+}
+
+export function takeWhile(predicate, iterable) {
+  var results = {};
+  results[Symbol.iterator] = function *() {
+    for (var x of iter(iterable)) {
+      if (predicate(x)) {
+        yield x;
+      } else {
+        break;
+      }
+    }
+  };
+  return results;
+}
+
+export function dropWhile(predicate, iterable) {
+  var results = {};
+  results[Symbol.iterator] = function *() {
+    let iterator = iter(iterable)[Symbol.iterator](),
+      elem = iterator.next();
+    while (!elem.done) {
+      let {value} = elem;
+      if (!predicate(value)) {
+        yield value;
+        break;
+      }
+      elem = iterator.next();
+    }
+    elem = iterator.next();
+    while (!elem.done) {
+      yield elem.value;
+      elem = iterator.next();
+    }
+  }
+  return results;
+}
+
+
+Wrapper() {
+
 }

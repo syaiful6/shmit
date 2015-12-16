@@ -17,3 +17,11 @@ export default function memoize(func) {
 
   return cached;
 };
+
+export function reduce(fn, iterable, start) {
+  var acc = start;
+  for (let elem of iterable) {
+    acc = fn(acc, elem);
+  }
+  return acc;
+}
