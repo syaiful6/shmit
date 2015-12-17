@@ -482,8 +482,3 @@ export function dropWhile(predicate, iterable) {
   }
   return results;
 }
-
-
-Wrapper() {
-
-}

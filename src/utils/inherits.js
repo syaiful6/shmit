@@ -28,11 +28,11 @@ function flatten(array, mutable) {
 }
 
 export default function inherits (child, ...parent) {
-  var parentmro = parent.filter(x => !!x.__mro__).map(x => x.__mro__),
-    mro = [].concat(parent, flatten(parentmro)),
+  var bases = parent.filter(x => !!x.__bases__).map(x => x.__bases__),
+    bases = [].concat(parent, flatten(bases)),
     added = [];
 
-  mro.forEach((resolution) => {
+  bases.forEach((resolution) => {
     for (var key in resolution) {
       if (hasProp.call(resolution, key) && added.indexOf(key) === -1) {
         added.push(key);
@@ -40,7 +40,7 @@ export default function inherits (child, ...parent) {
       }
     }
   });
-  var superProto = assign.apply(null, mro.map(res => res.prototype).reverse());
+  var superProto = assign.apply(null, bases.map(res => res.prototype).reverse());
   child.prototype = Object.create(superProto, {
     constructor: {
       value: child,
@@ -64,25 +64,28 @@ export default function inherits (child, ...parent) {
           }
         }
         return proto;
+      },
+      set: function () {
+        throw new Error('Nope, _super property not writable');
       }
     }
   });
 
-  Object.defineProperty(child, '__mro__', {
+  Object.defineProperty(child, '__bases__', {
     enumerable: false,
     configurable: true,
     writable: false,
-    value: mro
+    value: bases
   });
 }
 
 export function isinstance(obj, type) {
-  if (obj.constructor.__mro__) {
-    var mro = obj.constructor.__mro__,
-    len = mro.length,
+  if (obj.constructor.__bases__) {
+    var bases = obj.constructor.__bases__,
+    len = bases.length,
     i, current;
     for (i = 0; i < len; i++) {
-      current = mro[i];
+      current = bases[i];
       if (current === type) {
         return true;
       }
