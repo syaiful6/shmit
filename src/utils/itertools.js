@@ -1,22 +1,39 @@
+/**
+This is basically copied from Python's itertools, for use of this project.
+
+Many functions here accept argument named iterable, Any Javascript considered
+iterable when they are
+- Already has Symbol.iterator :smile:
+- Object (iterate over object's key)
+- Any Javascripts type that like container which have length, and the member can be accessed via incremental number
+  start with 0, (example: object[0], object[1], ...), so Array, String, NodeList considered iterable.
+*/
+
 import {reduce} from './functools';
 
-var _isArray;
+var _isArray,
+  type = Object.prototype.toString;
 
 if (!Array.isArray) {
   _isArray = function (x) {
-    return Object.prototype.toString.call(x) === '[object Array]';
+    return type.call(x) === '[object Array]';
   };
 } else {
   _isArray = Array.isArray;
 }
 
+/**
+* Convert to iterators,
+*/
 export function iter(iterable) {
   if (iterable[Symbol.iterator]) {
     return iterable;
   }
   var i = 0,
-    results ={};
-  if (iterable.toString() === '[object Object]') {
+    results = {};
+  // okay, they pass object here, so we assume they
+  // want to iterate over the keys
+  if (type.call(iterable) === '[object Object]') {
     iterable = Object.keys(iterable);
   }
   results[Symbol.iterator] = function () {
@@ -419,6 +436,7 @@ export function multiple(iterable, many = 2) {
 
 export function tee(iterable, n=2) {
   var iterator = iter(iterable)[Symbol.iterator]();
+  // create array to use it as queue, as many n
   var deques  = (function () {
     var results = [];
     for (let i of range(n)) {

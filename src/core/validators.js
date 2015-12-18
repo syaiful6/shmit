@@ -1,13 +1,10 @@
-export default function ValidationError(message) {
-  this.name = 'ValidationError';
-  this.message = message || 'Validation Error';
-  this.stack = (new Error()).stack;
+import inherits from '../utils/inherits';
+
+function _getLength(x) {
+  return x.length;
 }
 
-ValidationError.prototype = Object.create(Error.prototype);
-ValidationError.constructor = ValidationError;
-
-function ValidationError(message) {
+export default function ValidationError(message) {
   this.name = 'ValidationError';
   this.message = message || 'Validation Error';
   this.stack = (new Error()).stack;
@@ -100,42 +97,50 @@ BaseValidator.prototype = Object.create({
   }
 });
 
-export class MaxValueValidator extends BaseValidator {
-  message() {
-    return `Ensure this value is less than or equal to ${this.limitValue}.`;
-  }
-
-  compare(a, b) {
-    return a > b;
-  }
+export function MaxValueValidator() {
+  BaseValidator.apply(this, arguments);
 }
 
-export class MinValueValidator extends BaseValidator {
-  message() {
-    return `Ensure this value is less than or equal to ${this.limitValue}.`;
-  }
+inherits(MaxValueValidator, BaseValidator);
 
-  compare(a, b) {
-    return a < b;
-  }
+MaxValueValidator.prototype.message = function () {
+  return `Ensure this value is less than or equal to ${this.limitValue}.`;
+};
+
+MaxValueValidator.prototype.compare = function (a, b) {
+  return a > b;
+};
+
+export function MinValueValidator () {
+  BaseValidator.apply(this, arguments);
+};
+
+inherits(MinValueValidator, BaseValidator);
+
+MinValueValidator.prototype.message = function () {
+  return `Ensure this value is less than or equal to ${this.limitValue}.`;
 }
 
-export class MaxLengthValueValidator extends MaxValueValidator {
-  message() {
-    return `Ensure this value has at most ${this.limitValue} character (it has ${this.showValue}).`;
-  }
-
-  clean(a) {
-    return a.length;
-  }
+MinValueValidator.prototype.compare = function (a, b) {
+  return a < b;
 }
 
-export class MinLengthValidator extends MinValueValidator {
-  message() {
-    return `Ensure this value has at least ${this.limitValue} character (it has ${this.showValue}).`;
-  },
+export function MaxLengthValueValidator() {
+  MaxValueValidator.apply(this, arguments);
+};
 
-  clean(a) {
-    return a.length;
-  }
+inherits(MaxLengthValueValidator, MaxValueValidator);
+
+MaxLengthValueValidator.prototype.message = function () {
+  return `Ensure this value has at most ${this.limitValue} character (it has ${this.showValue}).`;
 }
+
+MaxLengthValueValidator.prototype.clean = _getLength;
+
+export function MinLengthValidator() {
+  MinValueValidator.apply(this, arguments);
+}
+
+inherits(MinLengthValidator, MinValueValidator);
+
+MinLengthValidator.prototype.clean = _getLength;

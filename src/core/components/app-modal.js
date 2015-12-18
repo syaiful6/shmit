@@ -16,8 +16,8 @@ AppModal.prototype.view = function() {
   let containerClass = "modal-container js-modal-container",
     backGroundClass = "modal-background js-modal-background";
   if (this._showing) {
-    backGroundClass += "fade-in open";
-    containerClass += "fade-in open";
+    backGroundClass += " fade-in open";
+    containerClass += " fade-in open";
   }
   return (
     <div className="modal-application">
