@@ -1,6 +1,8 @@
 import {reduce} from './functools';
+import isNumber from './number-type';
 
-var _isArray;
+var _isArray,
+  slice = [].slice;
 
 if (!Array.isArray) {
   _isArray = function (x) {
@@ -10,16 +12,22 @@ if (!Array.isArray) {
   _isArray = Array.isArray;
 }
 
+function createIterator(func) {
+  var iterator = {};
+  iterator[Symbol.iterator] = func;
+  return iterator;
+}
+
 export function iter(iterable) {
   if (iterable[Symbol.iterator]) {
     return iterable;
   }
-  var i = 0,
-    results ={};
+  var i = 0;
+
   if (iterable.toString() === '[object Object]') {
     iterable = Object.keys(iterable);
   }
-  results[Symbol.iterator] = function () {
+  return createIterator(function () {
     return {
       next() {
         if (iterable.next) {
@@ -29,13 +37,11 @@ export function iter(iterable) {
         return {value: done ? void 0: iterable[i++], done};
       }
     };
-  };
-  return results;
+  });
 }
 
 export function enumerate(iterable, start = 0) {
   var iterator = iter(iterable)[Symbol.iterator](),
-    results = {},
     done = false,
     n = start;
   function take() {
@@ -48,15 +54,14 @@ export function enumerate(iterable, start = 0) {
     n++;
     return results;
   }
-  results[Symbol.iterator] = function () {
+  return createIterator(function () {
     return {
       next() {
         let value = take();
         return {value, done};
       }
     };
-  };
-  return results;
+  });
 }
 
 export function toArray(iterable) {
@@ -153,22 +158,18 @@ export function zip(...iterables) {
       }
       return results;
     };
-
-  let results = {};
-  results[Symbol.iterator] = function ()  {
+  return createIterator(function ()  {
     return {
       next() {
         let value = take();
         return {value: done ? void 0 : value, done};
       }
     };
-  };
-  return results;
+  });
 }
 
 export function map(fn, ...iterables) {
   var zipped = zip(...iterables)[Symbol.iterator](),
-    results = {},
     done: false;
 
   function take() {
@@ -179,20 +180,18 @@ export function map(fn, ...iterables) {
     }
     return fn(...item.value);
   }
-  results[Symbol.iterator] = function () {
+  return createIterator(function () {
     return {
       next() {
         var value = take();
         return {value, done};
       }
     };
-  };
-  return results;
+  });
 }
 
 export function splatMap(fn, iterable) {
-  var iterator = iter(iterable)[Symbol.iterator](),
-    results = {};
+  var iterator = iter(iterable)[Symbol.iterator]();
   function take() {
     let item = iterator.next();
     if (item.done) {
@@ -201,48 +200,42 @@ export function splatMap(fn, iterable) {
     }
     return fn(...item.value)
   }
-  results[Symbol.iterator] = function () {
+  return createIterator(function () {
     return {
       next() {
         var value = take();
         return {value, done};
       }
     };
-  };
-  return results;
+  });
 }
 
 export function chain(...iterable) {
-  var results = {};
-  results[Symbol.iterator] = function *() {
+  return createIterator(function *() {
     for (let item of iterable) {
       for (let elem of iter(item)) {
         yield elem;
       }
     }
-  };
-  return results;
+  });
 }
 
 chain.fromIterable = function (iterable) {
-  var results = {};
-  results[Symbol.iterator] = function *() {
+  return createIterator(function *() {
     for (let item of iter(iterable)) {
       for (let elem of iter(item)) {
         yield elem;
       }
     }
-  };
-  return results;
+  });
 };
 
 export function repeat(target, times = null) {
-  var results = {},
-    limit = false;
+  var limit = false;
   if (times !== null) {
     limit = range(times)[Symbol.iterator]();
   }
-  results[Symbol.iterator] = function () {
+  return createIterator(function () {
     return {
       next() {
         var value = target;
@@ -254,28 +247,24 @@ export function repeat(target, times = null) {
         }
       }
     };
-  };
-  return results;
+  });
 }
 
 export function count(start=0, step=1) {
-  var results = {},
-    n = start - step;
-  results[Symbol.iterator] = function () {
+  var n = start - step;
+  return createIterator(function () {
     return {
       next() {
         n += step;
         return {value: n, done: false};
       }
     };
-  };
-  return results;
+  });
 }
 
 export function cycle(iterable) {
-  var iterator = iter(iterable),
-    results = {};
-  results[Symbol.iterator] = function *() {
+  var iterator = iter(iterable);
+  return createIterator(function *() {
     var saved = [],
       elem;
     for (elem of iterator) {
@@ -287,15 +276,13 @@ export function cycle(iterable) {
         yield elem;
       }
     }
-  };
-  return results;
+  });
 }
 
 export function accumulate(iterable, func = (a, b) => a + b) {
-  var iterator = iter(iterable)[Symbol.iterator](),
-    results = {};
+  var iterator = iter(iterable)[Symbol.iterator]();
 
-  results[Symbol.iterator] = function *() {
+  return createIterator(function *() {
     var item = iterator.next();
     if (item.done) {
       return;
@@ -310,13 +297,11 @@ export function accumulate(iterable, func = (a, b) => a + b) {
       total = func(total, item.value);
       yield total;
     }
-  };
-  return results;
+  });
 }
 
 export function combinations(iterable, r = null) {
-  var results = {};
-  results[Symbol.iterator] = function *() {
+  return createIterator(function *() {
     var pool = toArray(iterable),
       n = pool.length;
     r = r !== null ? r : n;
@@ -351,15 +336,20 @@ export function combinations(iterable, r = null) {
       }
       yield res;
     }
-  };
-  return results;
+  });
 }
 
-export function product(list, repeat = 1) {
-  let results = {};
-  results[Symbol.iterator] = function *(argument) {
+export function product() {
+  var i, iterables, repeat;
+  iterables = 2 <= arguments.length ? slice.call(arguments, 0, i = arguments.length - 1)
+    : (i = 0, []), repeat = arguments[i++];
+  if (!isNumber(repeat)) {
+    iterables.push(repeat);
+    repeat = 1;
+  }
+  return createIterator(function *() {
     var pools = [];
-    for (let it of list) {
+    for (let it of iterables) {
       pools.push(toArray(it));
     }
     pools = multiple(pools, repeat);
@@ -375,17 +365,16 @@ export function product(list, repeat = 1) {
     for (let ret of prod) {
       yield ret;
     }
-  };
-  return results;
+  });
 }
 
 export function permutations(iterable, r=null) {
-  let results = {};
-  results[Symbol.iterator] = function *() {
+
+  var iteration = function *() {
     var pool = toArray(iterable),
       n = pool.length;
       r = r !== null ? r: n;
-    for (let indices of product([range(n)], r)) {
+    for (let indices of product(range(n), r)) {
       let set = new Set(indices);
       if (set.size === r) {
         let results = (function () {
@@ -398,13 +387,12 @@ export function permutations(iterable, r=null) {
         yield results;
       }
     }
-  }
-  return results;
+  };
+  return createIterator(iteration);
 }
 
 export function multiple(iterable, many = 2) {
-  var results = {};
-  results[Symbol.iterator] = function *() {
+  return createIterator(function *() {
     var iterable = toArray(iterable),
       limit = many * iterable.length;
     for (let [index, elem] of enumerate(cycle(iterable), 1)) {
@@ -413,8 +401,7 @@ export function multiple(iterable, many = 2) {
       }
       yield elem;
     }
-  };
-  return results;
+  });
 }
 
 export function tee(iterable, n=2) {
@@ -448,8 +435,7 @@ export function tee(iterable, n=2) {
 }
 
 export function takeWhile(predicate, iterable) {
-  var results = {};
-  results[Symbol.iterator] = function *() {
+  return createIterator(function *() {
     for (var x of iter(iterable)) {
       if (predicate(x)) {
         yield x;
@@ -457,13 +443,11 @@ export function takeWhile(predicate, iterable) {
         break;
       }
     }
-  };
-  return results;
+  });
 }
 
 export function dropWhile(predicate, iterable) {
-  var results = {};
-  results[Symbol.iterator] = function *() {
+  return createIterator(function *() {
     let iterator = iter(iterable)[Symbol.iterator](),
       elem = iterator.next();
     while (!elem.done) {
@@ -479,11 +463,18 @@ export function dropWhile(predicate, iterable) {
       yield elem.value;
       elem = iterator.next();
     }
-  }
-  return results;
+  });
 }
 
-
-Wrapper() {
-
+export function filter(predicate, iterable, negate = false) {
+  return createIterator(function *() {
+    var pred = function (x) {
+      return negate ? !predicate(x) : predicate(x);
+    };
+    for (var x of iterable) {
+      if (pred(x)) {
+        yield x;
+      }
+    }
+  });
 }
