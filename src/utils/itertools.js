@@ -1,12 +1,25 @@
+/**
+This is basically copied from Python's itertools, for use of this project.
+
+Many functions here accept argument named iterable, Any Javascript considered
+iterable when they are
+- Already has Symbol.iterator :smile:
+- Object (iterate over object's key)
+- Any Javascripts type that like container which have length, and the member
+  can be accessed via incremental number start with 0,
+  (example: object[0], object[1], ...), so Array, String, NodeList considered iterable.
+*/
+
 import {reduce} from './functools';
 import isNumber from './number-type';
 
 var _isArray,
-  slice = [].slice;
+  slice = [].slice,
+  type = Object.prototype.toString;
 
 if (!Array.isArray) {
   _isArray = function (x) {
-    return Object.prototype.toString.call(x) === '[object Array]';
+    return type.call(x) === '[object Array]';
   };
 } else {
   _isArray = Array.isArray;
@@ -18,15 +31,22 @@ function createIterator(func) {
   return iterator;
 }
 
+/**
+* Convert to iterators,
+*/
+
 export function iter(iterable) {
   if (iterable[Symbol.iterator]) {
     return iterable;
   }
   var i = 0;
 
-  if (iterable.toString() === '[object Object]') {
+  // okay, they pass object here, so we assume they
+  // want to iterate over the keys
+  if (type.call(iterable) === '[object Object]') {
     iterable = Object.keys(iterable);
   }
+
   return createIterator(function () {
     return {
       next() {
@@ -84,17 +104,7 @@ export function range(start, end, step) {
     end = start;
     start = 0;
   }
-  if (start === end) {
-    let results = {};
-    results[Symbol.iterator] = function () {
-      return {
-        next() {
-          return {done: true};
-        }
-      };
-    };
-    return results;
-  } else if (start < end) {
+  if (start < end) {
     if (step == null) {
       step = 1;
     }
@@ -406,6 +416,7 @@ export function multiple(iterable, many = 2) {
 
 export function tee(iterable, n=2) {
   var iterator = iter(iterable)[Symbol.iterator]();
+  // create array to use it as queue, as many n
   var deques  = (function () {
     var results = [];
     for (let i of range(n)) {
@@ -478,3 +489,4 @@ export function filter(predicate, iterable, negate = false) {
     }
   });
 }
+

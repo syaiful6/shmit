@@ -1,5 +1,5 @@
 import BaseComponent from '../component';
-import Modal from './modal';
+import LoginModal from '../../auth/components/login-modal';
 import inherits from '../../utils/inherits';
 
 export default function Navigation () {
@@ -27,11 +27,14 @@ Navigation.prototype.view = function () {
       </nav>
     </header>
   );
-}
+};
 
 Navigation.prototype.showModalLogin = function (e) {
   e.preventDefault();
-  var modal = this.props.modal;
+  var modal = this.props.modal,
+    session = this.props.session;
 
-  modal.show(new Modal());
+  modal.show(new LoginModal({
+    session: session
+  }));
 };

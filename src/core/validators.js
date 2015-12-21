@@ -1,20 +1,16 @@
+import inherits from '../utils/inherits';
+
+function _getLength(x) {
+  return x.length;
+}
+
 export default function ValidationError(message) {
   this.name = 'ValidationError';
   this.message = message || 'Validation Error';
   this.stack = (new Error()).stack;
 }
 
-ValidationError.prototype = Object.create(Error.prototype);
-ValidationError.constructor = ValidationError;
-
-function ValidationError(message) {
-  this.name = 'ValidationError';
-  this.message = message || 'Validation Error';
-  this.stack = (new Error()).stack;
-}
-
-ValidationError.prototype = Object.create(Error.prototype);
-ValidationError.constructor = ValidationError;
+inherits(ValidationError, Error);
 
 export function EmailValidator(message, code, whitelist) {
   if (message) {
@@ -28,7 +24,7 @@ export function EmailValidator(message, code, whitelist) {
   }
 }
 
-EmailValidator.prototype = Object.create({
+EmailValidator.prototype = {
   message: 'Enter a valid email',
   code: 'invalid email',
   domainWhitelist: ['localhost'],
@@ -66,7 +62,7 @@ EmailValidator.prototype = Object.create({
     }
     return true;
   }
-});
+};
 
 export var validateEmail = new EmailValidator();
 
@@ -77,7 +73,7 @@ export function BaseValidator(limitValue, message) {
   }
 }
 
-BaseValidator.prototype = Object.create({
+BaseValidator.prototype = {
   message: function () {
     return `Ensure this value is ${this.limitValue} (it is ${this.showValue}).`;
   },
@@ -98,44 +94,55 @@ BaseValidator.prototype = Object.create({
       throw new ValidationError(message);
     }
   }
-});
+};
 
-export class MaxValueValidator extends BaseValidator {
-  message() {
-    return `Ensure this value is less than or equal to ${this.limitValue}.`;
-  }
-
-  compare(a, b) {
-    return a > b;
-  }
+export function MaxValueValidator() {
+  BaseValidator.apply(this, arguments);
 }
 
-export class MinValueValidator extends BaseValidator {
-  message() {
-    return `Ensure this value is less than or equal to ${this.limitValue}.`;
-  }
+inherits(MaxValueValidator, BaseValidator);
 
-  compare(a, b) {
-    return a < b;
-  }
+MaxValueValidator.prototype.message = function () {
+  return `Ensure this value is less than or equal to ${this.limitValue}.`;
+};
+
+MaxValueValidator.prototype.compare = function (a, b) {
+  return a > b;
+};
+
+export function MinValueValidator () {
+  BaseValidator.apply(this, arguments);
+};
+
+inherits(MinValueValidator, BaseValidator);
+
+MinValueValidator.prototype.message = function () {
+  return `Ensure this value is greater than or equal to ${this.limitValue}.`;
+};
+
+MinValueValidator.prototype.compare = function (a, b) {
+  return a < b;
+};
+
+export function MaxLengthValueValidator() {
+  MaxValueValidator.apply(this, arguments);
+};
+
+inherits(MaxLengthValueValidator, MaxValueValidator);
+
+MaxLengthValueValidator.prototype.message = function () {
+  return `Ensure this value has at most ${this.limitValue} character (it has ${this.showValue}).`;
+};
+
+MaxLengthValueValidator.prototype.clean = _getLength;
+
+export function MinLengthValidator() {
+  MinValueValidator.apply(this, arguments);
 }
 
-export class MaxLengthValueValidator extends MaxValueValidator {
-  message() {
-    return `Ensure this value has at most ${this.limitValue} character (it has ${this.showValue}).`;
-  }
+inherits(MinLengthValidator, MinValueValidator);
 
-  clean(a) {
-    return a.length;
-  }
-}
-
-export class MinLengthValidator extends MinValueValidator {
-  message() {
-    return `Ensure this value has at least ${this.limitValue} character (it has ${this.showValue}).`;
-  },
-
-  clean(a) {
-    return a.length;
-  }
+MinLengthValidator.prototype.clean = _getLength;
+MinLengthValidator.prototype.message = function () {
+  return `Ensure this value has at least ${this.limitValue} character (it has ${this.showValue}).`;
 }

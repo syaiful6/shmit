@@ -3,8 +3,9 @@ import Storage from '../auth/store/local-storage';
 import Session from '../auth/session';
 
 export default {
-  name: 'auth-session',
+  name: 'auth-session:main',
   after: 'application-configs:main',
+  before: 'routes:definition',
   initialize(app) {
     m.startComputation();
     var configs = app.lookup('configs'),
@@ -14,5 +15,6 @@ export default {
 
     app.register('session', session);
     session.restore();
+    m.endComputation();
   }
 };

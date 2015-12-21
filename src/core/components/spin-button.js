@@ -27,7 +27,7 @@ export default (function (Component) {
 
   SpinButton.prototype.getButtonContent = function () {
     var loadings = {
-      classsName: 'spinner'
+      className: 'spinner'
     };
     return [
       this.props.loading ? <span {...loadings}></span> : this.props.buttonText

@@ -1,16 +1,16 @@
 import signal from './signal';
 import computation from '../core/decorators';
 
-export default class Session {
+export default function Session (authenticator, storage) {
+  this.store = storage;
+  this.authenticator = authenticator;
+  this.isAuthenticated = false;
+  this._state = {authenticated: {}};
+  this._connected = false;
+  this._connectToStorage();
+}
 
-  constructor(authenticator, storage) {
-    this.store = storage;
-    this.authenticator = authenticator;
-    this.isAuthenticated = false;
-    this._state = {authenticated: {}};
-    this._connected = false;
-    this._connectToStorage();
-  }
+Session.prototype = {
 
   authenticate() {
     let authenticator = this.authenticator,
@@ -24,7 +24,7 @@ export default class Session {
         reject(error);
       });
     });
-  }
+  },
 
   invalidate() {
     let authenticator = this.authenticator;
@@ -32,20 +32,20 @@ export default class Session {
       authenticator.invalidate(this._state.authenticated).then(() => {
         this._clearState(true);
         signal.disconnect('authenticator:updated', this._changeState, this);
-        signal.disconnect('authenticator:invalidated', this._clearState, this);
+        signal.disconnect('authenticator:invalidated', this._authInvalidate, this);
         this._connected = false;
         resolve()
       }, (error) => {
         reject(error);
       });
     });
-  }
+  },
 
   restore() {
     let authenticator = this.authenticator;
     return new Promise((resolve, reject) => {
       let restoredContent   = this.store.restore();
-      authenticator.restore(restoredContent).then((content) => {
+      authenticator.restore(restoredContent.authenticated).then((content) => {
         this._state = restoredContent;
         this._changeState(content);
       }, (err) => {
@@ -54,7 +54,7 @@ export default class Session {
         reject(err);
       });
     });
-  }
+  },
 
   @computation
   _changeState(content, trigger) {
@@ -68,7 +68,7 @@ export default class Session {
     if (trigger) {
       signal.send('authenticated');
     }
-  }
+  },
 
   @computation
   _clearState(trigger) {
@@ -76,14 +76,22 @@ export default class Session {
     this.isAuthenticated = false;
     this._state.authenticated = {};
     this.store.persist(this._state);
-  }
+    if (trigger) {
+      signal.send('invalidated');
+    }
+  },
+
+  _authInvalidate() {
+    this._clearState(true);
+  },
 
   _connectToAuthenticatorEvent() {
     signal.connect('authenticator:updated', this._changeState, this);
-    signal.connect('authenticator:invalidated', this._clearState.bind(this, true));
-  }
+    signal.connect('authenticator:invalidated', this._authInvalidate, this);
+    this._connected = true;
+  },
 
   _connectToStorage() {
     signal.connect('storage:updated', this.restore, this);
   }
-}
+};
