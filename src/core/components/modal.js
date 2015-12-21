@@ -33,6 +33,10 @@ Modal.prototype.view = function () {
   );
 };
 
+/**
+* stop event buble here because we dont want the modal close
+* when user click on modal content area
+*/
 Modal.prototype.noBuble = function(e) {
   cancelEventPropagation(e);
   return false;

@@ -16,6 +16,7 @@ export default (function (Component) {
     attrs.type = attrs.type || 'button';
     const loading = attrs.loading;
     delete attrs.loading;
+    delete attrs.buttonText;
 
     if (attrs.disabled || loading) {
       attrs.className += ' disabled' + (loading ? ' loading' : '');

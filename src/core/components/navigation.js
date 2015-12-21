@@ -10,6 +10,7 @@ export default function Navigation () {
 inherits(Navigation, BaseComponent);
 
 Navigation.prototype.view = function () {
+  var isLoggedin = this.props.session.isAuthenticated;
   return (
     <header className="main-header">
       <nav className="top-bar global-nav">
@@ -21,7 +22,7 @@ Navigation.prototype.view = function () {
         <section className="top-bar-section">
           <ul className="right">
             <li><a href="/cart/" config={m.route}>Cart</a></li>
-            <li><a href="" onclick={this.showModalLogin.bind(this)}>Login</a></li>
+            {isLoggedin ? '' : <li><a href="" onclick={this.showModalLogin.bind(this)}>Login</a></li>}
           </ul>
         </section>
       </nav>

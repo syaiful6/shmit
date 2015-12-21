@@ -1,4 +1,8 @@
-export function Notification (message, options) {
+import computation from './decorators';
+/**
+* the notification model
+*/
+export default function Notification (message, options) {
   options = options || {};
   this.message = m.prop(message);
   this.status = options.status ? m.prop(options.status) : m.prop('notification');
@@ -6,50 +10,53 @@ export function Notification (message, options) {
   this.delayed = m.prop(options.delayed);
 }
 
-
-
-export default function Notifications() {
+/**
+* Notification service, this basically list of notification instance. But this notifications
+* instance will be injected to Notifications Component, so if you add new notification here
+* it will be displayed.
+*
+* this instance avalable in aplication service named 'notifications'. So you can get it via
+* app.lookup('notifications'), then you can use it to display your message to user.
+*/
+export function Notifications() {
   this.messages = [];
 }
 
 Notifications.prototype = {
-  notifications: function () {
+
+  notifications() {
     return this.messages.filter((message) => {
-      message.status() === 'notification' && !message.delayed();
+      return message.status() === 'notification' && !message.delayed();
     });
   },
 
-  alerts: function () {
+  alerts() {
     return this.messages.filter((message) => {
-      message.status() === 'alert' && !message.delayed();
+      return message.status() === 'alert' && !message.delayed();
     });
   },
 
-  displayDelayed: function () {
-    m.startComputation();
-    this.messages.filter((message) => message.delayed()).map((message) => {
+  @computation
+  displayDelayed() {
+    this.messages.filter((message) => message.delayed()).forEach((message) => {
       message.delayed(false);
     });
-    m.endComputation();
   },
 
-  add: function (notification) {
-    m.startComputation();
+  @computation
+  add(notification) {
     this.messages.push(notification);
-    m.endComputation();
   },
 
-  closeNotification: function (notification) {
+  @computation
+  closeNotification(notification) {
     var messages = this.messages,
       index = messages.indexOf(notification);
-    m.startComputation();
     messages.splice(index, 1);
-    m.endComputation();
   },
 
-  closeAll: function() {
-    m.startComputation();
+  @computation
+  closeAll() {
     this.messages = [];
-    m.endComputation();
   }
 };

@@ -2,13 +2,16 @@ import BaseModal from '../../core/components/modal';
 import SpinButton from '../../core/components/spin-button';
 import inherits from '../../utils/inherits';
 import {cancelEventPropagation} from '../../utils/event';
-
+/**
+* Todo: add validation before submit
+*/
 export default function LoginModal() {
   BaseModal.apply(this, arguments);
 
   this.email = m.prop(this.props.email || '');
   this.password = m.prop(this.props.password || '');
   this.loading = false;
+  this.errors = {};
 }
 
 inherits(LoginModal, BaseModal);
@@ -57,7 +60,9 @@ LoginModal.prototype.login = function (e) {
 
   let session = this.props.session;
 
-  session.authenticate(email, password).catch((error) => {
+  session.authenticate(email, password).then((content) => {
+    this.loading = false;
+  }, (err) => {
     this.loading = false;
   });
 };

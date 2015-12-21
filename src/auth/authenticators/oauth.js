@@ -46,7 +46,7 @@ OauthAuthenticator.prototype = {
       },
         endpoint = this.tokenEndpoint;
       if (scope) {
-        data.scope = scope.join(' ');
+        data.scope = scope;
       }
       this.makeRequest(endpoint, data).then((response) => {
         let expired = normalizeExpirationTime(response['expires_in']);
@@ -57,7 +57,9 @@ OauthAuthenticator.prototype = {
           response.expired_at = expired;
         }
         resolve(response);
-      }, (err) => reject(err));
+      }, (err) => {
+        reject(err)
+      });
     });
   },
 
@@ -88,15 +90,14 @@ OauthAuthenticator.prototype = {
   makeRequest: function (url, data) {
     var clientId = this.clientId,
       clientSecret = this.clientSecret,
+      data = Object.assign(data, {client_id: clientId, client_secret: clientSecret}),
       config = {
         method: 'POST',
         data: urlFormEncode(data),
         headers: {
           "Content-Type": "application/x-www-form-urlencoded",
           "Accept": "application/json"
-        },
-        user: clientId,
-        password: clientSecret
+        }
       };
     return request(url, config).then(JSON.parse);
   },

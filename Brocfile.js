@@ -18,7 +18,6 @@ var babel = require('broccoli-babel-transpiler'),
   extension = env === 'production' ? '.min.js' : '.js';
 
 var babelOptions = {
-  loose: true,
   sourceMaps: false,
   modules: 'amdStrict',
   moduleIds: true,

@@ -32,8 +32,8 @@ export default {
       // walk over this node list
       for (i = 0; i < len; i++) {
         config = metaConfigs[i];
-        name = config.name;
-        value = config.value;
+        name = config.getAttribute('name');
+        value = config.getAttribute('content');
         propertyName = name.substring(4);
         repositories[propertyName] = mapType(value);
       }
