@@ -1,6 +1,6 @@
-import request from 'shopie/utils/request';
+import request, { urlFormEncode } from 'shopie/utils/request';
 import { merge } from 'shopie/utils/collections';
-import { customEvent } from 'shopie/utils/event';
+import signal from '../signal';
 
 function normalizeExpirationTime(expiresIn) {
   if (expiresIn) {
@@ -37,19 +37,18 @@ OauthAuthenticator.prototype = {
     });
   },
 
-  authenticate: function(username, password, scope = []) {
+  authenticate: function(username, password, scope = ['read', 'write']) {
     return new Promise((resolve, reject) => {
       let data = {
         'grant_type': 'password',
-        username: identification,
+        username,
         password
       },
-        endpoint = this.tokenEndpoint,
-        scope = scope.join(' ');
+        endpoint = this.tokenEndpoint;
       if (scope) {
         data.scope = scope;
       }
-      this.makeRequest(url, data).then((response) => {
+      this.makeRequest(endpoint, data).then((response) => {
         let expired = normalizeExpirationTime(response['expires_in']);
         this._scheduleRefreshToken(response['expires_in'], expired,
           response['refresh_token']
@@ -58,8 +57,10 @@ OauthAuthenticator.prototype = {
           response.expired_at = expired;
         }
         resolve(response);
-      }, (err) => reject(err));
-    })
+      }, (err) => {
+        reject(err)
+      });
+    });
   },
 
   invalidate: function (data) {
@@ -88,16 +89,15 @@ OauthAuthenticator.prototype = {
 
   makeRequest: function (url, data) {
     var clientId = this.clientId,
-      clientSecret = this.clientSecret;
+      clientSecret = this.clientSecret,
+      data = Object.assign(data, {client_id: clientId, client_secret: clientSecret}),
       config = {
         method: 'POST',
-        data: new FormData(data),
+        data: urlFormEncode(data),
         headers: {
           "Content-Type": "application/x-www-form-urlencoded",
           "Accept": "application/json"
-        },
-        user: clientId,
-        password: clientSecret
+        }
       };
     return request(url, config).then(JSON.parse);
   },
@@ -143,7 +143,6 @@ OauthAuthenticator.prototype = {
   },
 
   _dispatchSessionEvent: function (data) {
-    var event = customEvent('session:updated', {data});
-    window.dispatchEvent(event);
+    signal.send('authenticator:updated', data);
   }
 };

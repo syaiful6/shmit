@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Shmit Spec</title>
+    <meta name="description" content="">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" type="text/css" href="../bower_components/jasmine-core/lib/jasmine-core/jasmine.css">
+    <script src="../bower_components/jasmine-core/lib/jasmine-core/jasmine.js"></script>
+    <script src="../bower_components/jasmine-core/lib/jasmine-core/jasmine-html.js"></script>
+    <script src="../bower_components/jasmine-core/lib/jasmine-core/boot.js"></script>
+  </head>
+  <body>
+    <div style="display:none"><!-- for now just display none it.-->
+      <div id="main-header-top"></div>
+      <div id="sh-application"></div>
+      <div id="sh-notifications"></div>
+      <div id="sh-modal"></div>
+    </div>
+    <script src="../dist/vendor.js"></script>
+    <script src="../dist/shopie.js"></script>
+    <script>
+    (function () {
+      // run all specs
+      var specs_re = new RegExp('^shopie\/(spec)\/');
+      Object.keys(requirejs._eak_seen).map(function (moduleName) {
+        return {
+          moduleName: moduleName,
+          matches: specs_re.exec(moduleName)
+        };
+      }).filter(function (dep) {
+        return dep.matches && dep.matches.length === 2;
+      }).forEach(function (dep) {
+        var moduleName = dep.moduleName;
+        require(moduleName, null, null, true);
+      });
+    })();
+    </script>
+  </body>
+</html>

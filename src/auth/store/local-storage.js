@@ -1,5 +1,6 @@
 import objectAreEqual from 'shopie/utils/object-are-equal';
-import addEvent, { customEvent } from 'shopie/utils/event';
+import addEvent from 'shopie/utils/event';
+import signal from '../signal';
 
 const _storage = window.localStorage;
 const KEYSTORAGE = 'shopie:auth-storage';
@@ -15,8 +16,7 @@ LocalStorage.prototype = {
       let data = this.restore();
       if (!objectAreEqual(data, this._lastData)) {
         this._lastData = data;
-        var event = customEvent('session:updated', {data});
-        window.dispatchEvent(event);
+        signal.send('storage:updated', data);
       }
     });
   },
