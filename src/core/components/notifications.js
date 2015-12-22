@@ -12,10 +12,10 @@ var Notification = (function (Base) {
   Notification.prototype.view = function () {
     var notification = this.props.notification,
       onclick = this.props.onclick,
-      containerClass = `sh-notification-content ${this.typeClass(notification.type())}`;
+      containerClass = `sh-notification sh-notification-passive ${this.typeClass(notification.type())}`;
     return (
-      <div className="sh-item-notification">
-        <div className={containerClass}>{notification.message()}</div>
+      <div className={containerClass}>
+        <div className="sh-notification-content">{notification.message()}</div>
         <button className="sh-notification-close icon-x" onclick={onclick}><span className="hidden">Close</span></button>
       </div>
     );
@@ -48,9 +48,16 @@ export default (function (Base) {
   NotificationsComponent.prototype.view = function () {
     var notifications = this.props.notifications,
       notif = notifications.notifications();
-    return notif.map((notification) => {
-      return Notification.component({notification, onclick: this.closeNotification.bind(this, notification)});
-    });
+    return (
+      <div className="sh-notifications">
+        {notif.map((notification) => {
+          return Notification.component({
+            notification,
+            onclick: this.closeNotification.bind(this, notification)
+          });
+        })}
+      </div>
+    );
   };
 
   NotificationsComponent.prototype.closeNotification = function (notification, e) {

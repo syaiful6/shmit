@@ -25,11 +25,11 @@ LoginModal.prototype.content = function () {
     <form className="login-modal">
       <div className="form-group">
         <input className="sh-input email" name="email" value={this.email()}
-        disabled={this.loading} onchange={m.withAttr('value', this.email)} />
+        disabled={this.loading} onchange={m.withAttr('value', this.email)} placeholder="email or username"/>
       </div>
       <div className="form-group">
         <input className="sh-input" name="password" type="password" value={this.password()}
-        disabled={this.loading} onchange={m.withAttr('value', this.password)} />
+        disabled={this.loading} onchange={m.withAttr('value', this.password)} placeholder="you super secret password" />
       </div>
     </form>
   ];
@@ -62,7 +62,9 @@ LoginModal.prototype.login = function (e) {
 
   session.authenticate(email, password).then((content) => {
     this.loading = false;
+    window.location.reload();
   }, (err) => {
     this.loading = false;
+    m.redraw.strategy('diff');
   });
 };

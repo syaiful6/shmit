@@ -89,7 +89,7 @@ export function toArray(iterable) {
     return iterable;
   }
   return (function () {
-    var results,
+    var results = [],
       iterator = iter(iterable),
       item;
     for (item of iterator) {
@@ -489,4 +489,3 @@ export function filter(predicate, iterable, negate = false) {
     }
   });
 }
-

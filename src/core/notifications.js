@@ -1,6 +1,9 @@
 import computation from './decorators';
 /**
 * the notification model
+*
+* @param message String message for displayed to user
+* @param options Object list options
 */
 export default function Notification (message, options) {
   options = options || {};
@@ -11,12 +14,13 @@ export default function Notification (message, options) {
 }
 
 /**
-* Notification service, this basically list of notification instance. But this notifications
-* instance will be injected to Notifications Component, so if you add new notification here
-* it will be displayed.
+* Notification service, this basically list of notification instance. But this
+* notifications instance will be injected to Notifications Component, so if you
+* add new notification here it will be automatically displayed.
 *
-* this instance avalable in aplication service named 'notifications'. So you can get it via
-* app.lookup('notifications'), then you can use it to display your message to user.
+* this instance avalable in aplication service named 'notifications'.
+* So you can get it via app.lookup('notifications'), then you can use it to
+* display your message to user.
 */
 export function Notifications() {
   this.messages = [];

@@ -72,11 +72,11 @@ app = babel(pickFiles(app, {
 
 app = es3SafeRecast(app);
 
-var specs = 'specs';
+var specs = 'spec';
 
 specs = babel(pickFiles(specs, {
   src: '/',
-  destDir: 'shopie/specs'
+  destDir: 'shopie/spec'
 }), babelOptions);
 
 var vendor = 'vendor';
