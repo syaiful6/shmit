@@ -1,8 +1,13 @@
+var defaultHeaders = {};
+export function setDefaultHeaders(func) {
+  defaultHeaders = func(defaultHeaders);
+}
+
 export default function request(url, options) {
   let hash = requestOptions(url, options);
   return new Promise((resolve, reject) => {
     let req = new XMLHttpRequest();
-    req.open(ensureSlash(hash.method), hash.url, true, hash.user, hash.password);
+    req.open(hash.method, ensureSlash(hash.url), true, hash.user, hash.password);
     req.onreadystatechange = (e) => {
       if(req.readyState !== 4) {
         return;
@@ -44,7 +49,7 @@ function requestOptions(url, options) {
   var hash = options || {};
   hash.url = url;
   hash.method = (hash.method).toUpperCase() || 'GET';
-  hash.headers = hash.headers || {};
+  hash.headers = Object.assign(defaultHeaders, hash.headers || {});
   return hash;
 }
 

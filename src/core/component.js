@@ -46,10 +46,6 @@ export default (function () {
     return elem ? root.querySelectorAll(elem) : root;
   };
 
-  Component.prototype.toString = function () {
-    return '<component baseclass>';
-  };
-
   Component.component = function (props = {}, children = null) {
     let properties = Object.assign({}, props);
     if (children) {
