@@ -60,7 +60,7 @@ function ensureSlash(url) {
   //this url include query params, so take it out first
   if (queryStart !== -1) {
     queryString = url.substr(queryStart + 1, url.length);
-    url = path.substr(0, queryStart);
+    url = url.substr(0, queryStart);
   }
   url = url.slice(-1) !== '/' ? `${url}/` : url;
   return queryString == null ? url : `${url}?${queryString}`;
