@@ -112,7 +112,7 @@ MaxValueValidator.prototype.compare = function (a, b) {
 
 export function MinValueValidator () {
   BaseValidator.apply(this, arguments);
-};
+}
 
 inherits(MinValueValidator, BaseValidator);
 
@@ -145,4 +145,4 @@ inherits(MinLengthValidator, MinValueValidator);
 MinLengthValidator.prototype.clean = _getLength;
 MinLengthValidator.prototype.message = function () {
   return `Ensure this value has at least ${this.limitValue} character (it has ${this.showValue}).`;
-}
+};
