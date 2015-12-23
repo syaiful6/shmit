@@ -167,7 +167,7 @@ export default (function () {
         }
       }, options);
       let url = makeRoute(this.store.apiRoot, [this.data.type]);
-      if (this.exist) {
+      if (this.exists) {
         url += `/${this.data.id}`;
       }
       return request(url, options).then(JSON.parse).then((payload) => {
@@ -198,23 +198,62 @@ export var attr = function (name, transform) {
 };
 
 export var hasMany = function (name) {
-  return function () {
-    if (this.data.relationships) {
-      const relationship = this.data.relationships[name];
-      if (relationship) {
-        return relationship.data.map(data => this.store.peekRecord(data.type, data.id));
+  return {
+    enumerable: true,
+    configurable: true,
+    get: function () {
+      if (this.data.relationships) {
+        const relationship = this.data.relationships[name];
+        if (relationship) {
+          return relationship.data.map(data => this.store.peekRecord(data.type, data.id));
+        }
+      }
+    },
+    set: function (value) {
+      if (this.data.relationship) {
+        this.data.relationship[name] = (function (relation) {
+          if (!isArray(relation)) {
+            throw new Error('You are trying to set hasMany relationship, but the value isn\'t an array.');
+          }
+          return relation.map(function (data) {
+            if (data.toJSON) {
+              return {
+                data: Model.getIdentifier(data)
+              };
+            } else {
+              return data;
+            }
+          });
+        })(value);
       }
     }
   };
 };
 
 export var hasOne = function (name) {
-  return function () {
-    if (this.data.relationship) {
-      const relationship = this.data.relationships[name];
+  return {
+    enumerable: true,
+    configurable: true,
+    get: function () {
+      if (this.data.relationship) {
+        const relationship = this.data.relationships[name];
 
-      if (relationship) {
-        return this.store.peekRecord(relationship.data.type, relationship.data.id);
+        if (relationship) {
+          return this.store.peekRecord(relationship.data.type, relationship.data.id);
+        }
+      }
+    },
+    set: function (value) {
+      if (this.data.relationship) {
+        this.data.relationships[name] = (function (relation) {
+          if (relation.toJSON) {
+            return {
+              data: Model.getIdentifier(relation)
+            };
+          } else {
+            return relation;
+          }
+        })(value);
       }
     }
   };

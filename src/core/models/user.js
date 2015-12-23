@@ -1,5 +1,5 @@
 import Model, {attr} from '../model';
-import inherits, {assign} from '../../utils/inherits';
+import inherits from '../../utils/inherits';
 
 export default (function (BaseModel) {
   function User() {
