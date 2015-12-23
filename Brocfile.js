@@ -21,6 +21,7 @@ var babelOptions = {
   sourceMaps: false,
   modules: 'amdStrict',
   moduleIds: true,
+  externalHelpers: true,
   resolveModuleSource: moduleResolve
 };
 
@@ -124,7 +125,7 @@ babelPath = babelPath.join('/')
 babelPath +='/node_modules/babel-core';
 
 var browserPolyfill = pickFiles(babelPath, {
-  files: ['browser-polyfill.js']
+  files: ['browser-polyfill.js', 'external-helpers.js']
 });
 
 var vendorTree = mergeTrees([browserPolyfill, bower]);
