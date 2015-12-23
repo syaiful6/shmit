@@ -65,6 +65,6 @@ LoginModal.prototype.login = function (e) {
     window.location.reload();
   }, (err) => {
     this.loading = false;
-    m.redraw.strategy('diff');
+    m.redraw(true);
   });
 };
