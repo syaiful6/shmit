@@ -97,6 +97,10 @@ export default (function () {
     throw new Error('no service named ' + name);
   };
 
+  Application.prototype.setTitle = function (title) {
+    window.document.title = title;
+  };
+
   Application.prototype.mapRoutes = function () {
     let routes = this.routes,
       map = {},
