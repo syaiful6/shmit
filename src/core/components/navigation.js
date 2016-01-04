@@ -1,5 +1,6 @@
 import BaseComponent from '../component';
 import LoginModal from '../../auth/components/login-modal';
+import SignupModal from '../../auth/components/signup-modal';
 import inherits from '../../utils/inherits';
 
 export default function Navigation () {
@@ -23,6 +24,7 @@ Navigation.prototype.view = function () {
           <ul className="right">
             <li><a href="/cart/" config={m.route}>Cart</a></li>
             {isLoggedin ? '' : <li><a href="" onclick={this.showModalLogin.bind(this)}>Login</a></li>}
+            {isLoggedin ? '' : <li><a href="" onclick={this.showModalSignUp.bind(this)}>Sign Up</a></li>}
           </ul>
         </section>
       </nav>
@@ -33,10 +35,32 @@ Navigation.prototype.view = function () {
 Navigation.prototype.showModalLogin = function (e) {
   e.preventDefault();
   var modal = this.props.modal,
-    onAuthenticated = this.props.onAuthenticated,
+    onAuthenticate = this.props.onAuthenticate,
     isLoggedin = this.props.session.isAuthenticated;
 
+  if (isLoggedin) {
+    return;
+  }
   modal.openModal(new LoginModal({
-    onAuthenticated
+    onAuthenticate,
+    isLoggedin,
+    showSignup: this.showModalSignUp.bind(this)
   }));
 };
+
+
+Navigation.prototype.showModalSignUp = function (e) {
+  e.preventDefault();
+  var modal = this.props.modal,
+    onSignup = this.props.onSignup,
+    isLoggedin = this.props.isAuthenticated;
+
+  if (isLoggedin) {
+    return;
+  }
+
+  modal.openModal(new SignupModal({
+    onSignup,
+    showLogin: this.showModalLogin.bind(this)
+  }));
+}

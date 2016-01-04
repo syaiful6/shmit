@@ -39,9 +39,9 @@ export function queryURL(type, query) {
 }
 
 export function saveURL(record) {
-  var url = URLBuilder.api(record.data.type);
-  if (typeof record.data.id !== 'undefined') {
-    let identifier = record.data.id;
+  var url = URLBuilder.api(record.type);
+  if (typeof record.id !== 'undefined') {
+    let identifier = record.id;
     url = URLBuilder.join(url, identifier.toString());
   }
   return url;
@@ -67,7 +67,7 @@ export var saveRecord = defineAction(
   SAVE_RECORD,
   function (record, options = {}) {
     options = Object.assign({
-      method: record.data.id !== 'undefined' ? 'PATCH' : 'POST',
+      method: typeof record.id !== 'undefined' ? 'PATCH' : 'POST',
       data: JSON.stringify({data: record})
     }, options);
     var url = saveURL(record);

@@ -29,7 +29,7 @@ LoginModal.prototype.content = function () {
       </div>
     ]
     : [
-      <form className="login-modal">
+      <form className="login-modal" novalidate="novalidate">
         <div className="form-group">
           <input className="sh-input email" name="email" value={this.email()}
           disabled={this.loading} onchange={m.withAttr('value', this.email)} placeholder="email or username"/>
@@ -43,7 +43,8 @@ LoginModal.prototype.content = function () {
 };
 
 LoginModal.prototype.footerContent = function () {
-  var isLoggedin = this.props.isLoggedin;
+  var isLoggedin = this.props.isLoggedin,
+    showSignup = this.props.showSignup;
   if (!isLoggedin) {
     return [
       <footer className="modal-footer">
@@ -54,6 +55,10 @@ LoginModal.prototype.footerContent = function () {
           buttonText: 'Login',
           onclick: this.login.bind(this)
         })}
+        {typeof showSignup === 'function'
+          ? <button type="button" className="btn btn-link" onclick={showSignup}>Sign up</button>
+          : ''
+        }
       </footer>
     ];
   } else {
@@ -70,9 +75,9 @@ LoginModal.prototype.login = function (e) {
   const email = this.email();
   const password = this.password();
 
-  let onAuthenticated = this.props.onAuthenticated;
+  let onAuthenticate = this.props.onAuthenticate;
 
-  onAuthenticated(email, password);
+  onAuthenticate(email, password);
   // we will wait a bit, if session updated it will redraw and this modal will close,
   // if anything wrong, just redraw again
   setTimeout(() => {

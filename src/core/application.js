@@ -1,6 +1,5 @@
 import { DAGMap } from '../utils/collections';
 import addEvent from '../utils/event';
-import {range} from '../utils/itertools';
 
 var hasProp = {}.hasOwnProperty;
 /**
@@ -91,16 +90,9 @@ export default (function () {
   };
 
   Application.prototype.lookup = function (name) {
-    var services = this.services,
-      serviceName;
-
-    for (serviceName in services) {
-      if (!hasProp.call(services, serviceName)) {
-        continue;
-      }
-      if (serviceName === name) {
-        return services[serviceName];
-      }
+    var service = this.services[name];
+    if (service) {
+      return service;
     }
     throw new Error('no service named ' + name);
   };

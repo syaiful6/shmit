@@ -8,6 +8,7 @@ import Navigation from './navigation';
 import Notifications from './notifications';
 
 import {closeNotification as closeNotif} from '../store/notifications';
+import {saveRecord} from '../store/records';
 import {sessionAuthenticate} from '../../auth/store/session';
 
 export default (function (Component) {
@@ -28,7 +29,8 @@ export default (function (Component) {
         Navigation.component({
           session,
           modal,
-          onAuthenticated: this.authenticate.bind(this)
+          onAuthenticate: this.authenticate.bind(this),
+          onSignup: this.signUp.bind(this)
         }),
         m('div', {id: "sh-main", className: "sh-main"}),
         Notifications.component({
@@ -61,6 +63,16 @@ export default (function (Component) {
     authenticate: function (...args) {
       var store = this.props.store;
       return store.dispatch(sessionAuthenticate(...args));
+    },
+
+    signUp: function (data) {
+      var store = this.props.store,
+        payload = Object.assign({}, data);
+
+      if (typeof data.type === 'undefined') {
+        payload.type = 'users';
+      }
+      return store.dispatch(saveRecord(payload));
     },
 
     config: function (isInitialized, context) {
