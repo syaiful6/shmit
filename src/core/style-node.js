@@ -24,7 +24,7 @@ export default (function () {
       classes = [classes];
     }
     classes.forEach((cls) => {
-      if (body.classList) {
+      if (node.classList) {
         node.classList.add(cls);
       } else {
         node.className += ` ${cls}`;
@@ -38,7 +38,7 @@ export default (function () {
     if (!Array.isArray(classes)) {
       classes = [classes];
     }
-    if (body.classList) {
+    if (node.classList) {
       classes.forEach((cls) => {
         node.classList.remove(cls);
       });
