@@ -1,3 +1,0 @@
-(function () {
-  require('shopie/app');
-})();

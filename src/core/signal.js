@@ -5,7 +5,7 @@ export default function Signal(...events) {
   events.forEach((event) => this.receivers[event] = []);
 }
 
-Signal.prototype = {
+Object.assign(Signal.prototype, {
 
   liveReceivers: function (event) {
     var receivers = this.receivers;
@@ -37,7 +37,7 @@ Signal.prototype = {
       }
     }
   }
-};
+});
 
 /**
 * decorator for connect to a given signal

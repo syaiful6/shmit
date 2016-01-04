@@ -1,4 +1,29 @@
-export default function objectsAreEqual(a, b) {
+/**
+* utility for working with object
+*/
+var fnToString = (fn) => Function.prototype.toString.call(fn);
+const OBJECT_STRING_VALUE = fnToString(Object);
+
+export default function isPlain(obj) {
+  if (!obj || typeof obj !== 'object') {
+    return false;
+  }
+
+  let proto = typeof obj.constructor === 'function'
+    ? Object.getPrototypeOf(obj) : Object.prototype;
+
+  if (proto === null) {
+    return true;
+  }
+
+  var constructor = proto.constructor;
+
+  return typeof constructor === 'function'
+    && constructor instanceof constructor
+    && fnToString(constructor) === OBJECT_STRING_VALUE;
+}
+
+export function equal(a, b) {
   function compare(x, y) {
     let property;
     if (isNaN(x) && isNaN(y) && typeof x === 'number' && typeof y === 'number') {
@@ -46,4 +71,18 @@ export default function objectsAreEqual(a, b) {
   }
 
   return compare(a, b);
+}
+
+export function ownKeys(obj) {
+  if (typeof Reflect !== 'undefined' && typeof Reflect.ownKeys === 'function') {
+    return Reflect.ownKeys(obj);
+  }
+
+  var keys = Object.getOwnPropertyNames(obj);
+
+  if (typeof Object.getOwnPropertySymbols === 'function') {
+    keys = keys.concat(Object.getOwnPropertySymbols(obj));
+  }
+
+  return keys;
 }

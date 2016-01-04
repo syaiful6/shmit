@@ -21,32 +21,44 @@ LoginModal.prototype.title = function () {
 };
 
 LoginModal.prototype.content = function () {
-  return [
-    <form className="login-modal">
-      <div className="form-group">
-        <input className="sh-input email" name="email" value={this.email()}
-        disabled={this.loading} onchange={m.withAttr('value', this.email)} placeholder="email or username"/>
+  var isLoggedin = this.props.isLoggedin;
+  return isLoggedin
+    ? [
+      <div className="warning">
+        <p>Welcome, you are already logged-in</p>
       </div>
-      <div className="form-group">
-        <input className="sh-input" name="password" type="password" value={this.password()}
-        disabled={this.loading} onchange={m.withAttr('value', this.password)} placeholder="you super secret password" />
-      </div>
-    </form>
-  ];
+    ]
+    : [
+      <form className="login-modal">
+        <div className="form-group">
+          <input className="sh-input email" name="email" value={this.email()}
+          disabled={this.loading} onchange={m.withAttr('value', this.email)} placeholder="email or username"/>
+        </div>
+        <div className="form-group">
+          <input className="sh-input" name="password" type="password" value={this.password()}
+          disabled={this.loading} onchange={m.withAttr('value', this.password)} placeholder="you super secret password" />
+        </div>
+      </form>
+    ];
 };
 
 LoginModal.prototype.footerContent = function () {
-  return [
-    <footer className="modal-footer">
-      {SpinButton.component({
-        type: 'button',
-        className: 'btn btn-blue js-button',
-        loading: this.loading,
-        buttonText: 'Login',
-        onclick: this.login.bind(this)
-      })}
-    </footer>
-  ];
+  var isLoggedin = this.props.isLoggedin;
+  if (!isLoggedin) {
+    return [
+      <footer className="modal-footer">
+        {SpinButton.component({
+          type: 'button',
+          className: 'btn btn-blue js-button',
+          loading: this.loading,
+          buttonText: 'Login',
+          onclick: this.login.bind(this)
+        })}
+      </footer>
+    ];
+  } else {
+    return this.__super__.footerContent();
+  }
 };
 
 
@@ -58,13 +70,13 @@ LoginModal.prototype.login = function (e) {
   const email = this.email();
   const password = this.password();
 
-  let session = this.props.session;
+  let onAuthenticated = this.props.onAuthenticated;
 
-  session.authenticate(email, password).then((content) => {
+  onAuthenticated(email, password);
+  // we will wait a bit, if session updated it will redraw and this modal will close,
+  // if anything wrong, just redraw again
+  setTimeout(() => {
     this.loading = false;
-    window.location.reload();
-  }, (err) => {
-    this.loading = false;
-    m.redraw(true);
-  });
+    m.redraw();
+  }, 2000);
 };

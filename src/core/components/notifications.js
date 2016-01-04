@@ -12,10 +12,10 @@ var Notification = (function (Base) {
   Notification.prototype.view = function () {
     var notification = this.props.notification,
       onclick = this.props.onclick,
-      containerClass = `sh-notification sh-notification-passive ${this.typeClass(notification.type())}`;
+      containerClass = `sh-notification sh-notification-passive ${this.typeClass(notification.type)}`;
     return (
       <div className={containerClass}>
-        <div className="sh-notification-content">{notification.message()}</div>
+        <div className="sh-notification-content">{notification.message}</div>
         <button className="sh-notification-close icon-x" onclick={onclick}><span className="hidden">Close</span></button>
       </div>
     );
@@ -28,7 +28,7 @@ var Notification = (function (Base) {
       error: 'red',
       warn: 'yellow'
     };
-    if (typeMapping[type] !== undefined) {
+    if (typeof typeMapping[type] !== 'undefined') {
       classes += `sh-notification-${typeMapping[type]}`;
     }
     return classes;
@@ -39,33 +39,33 @@ var Notification = (function (Base) {
 })(BaseComponent);
 
 export default (function (Base) {
-  function NotificationsComponent() {
+  function Notifications() {
     Base.apply(this, arguments);
   }
 
-  inherits(NotificationsComponent, Base);
+  inherits(Notifications, Base);
 
-  NotificationsComponent.prototype.view = function () {
+  Notifications.prototype.view = function () {
     var notifications = this.props.notifications,
-      notif = notifications.notifications();
+      notif = notifications.filter((n) => !n.delayed);
     return (
       <div className="sh-notifications">
-        {notif.map((notification) => {
+        {notif.map((notification, index) => {
           return Notification.component({
             notification,
-            onclick: this.closeNotification.bind(this, notification)
+            onclick: this.closeNotification.bind(this, index)
           });
         })}
       </div>
     );
   };
 
-  NotificationsComponent.prototype.closeNotification = function (notification, e) {
+  Notifications.prototype.closeNotification = function (index, e) {
     cancelEventPropagation(e);
     e.preventDefault();
-    var notifications = this.props.notifications;
-    notifications.closeNotification(notification);
+    var onclose = this.props.onclose;
+    onclose(index);
   };
 
-  return NotificationsComponent;
+  return Notifications;
 })(BaseComponent);

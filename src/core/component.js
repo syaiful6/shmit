@@ -2,8 +2,9 @@
 export default (function () {
   function Component (props = {}, children = null) {
     if (children) {
-      this.constructor.initProps(props);
+      props.children = children;
     }
+    this.constructor.initProps(props);
     this.props = props;
     this.element = null;
     this.init();

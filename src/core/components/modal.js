@@ -53,7 +53,3 @@ Modal.prototype.content = function () {
 Modal.prototype.footerContent = function () {
 
 };
-
-Modal.prototype.onready = function (parentSelector) {
-  this.parentSelector = parentSelector;
-};

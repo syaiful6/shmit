@@ -1,4 +1,4 @@
-import Model, {attr} from '../model';
+import Model, {attr} from '../../core/model';
 import inherits from '../../utils/inherits';
 
 export default (function (BaseModel) {

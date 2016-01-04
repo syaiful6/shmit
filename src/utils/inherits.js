@@ -1,5 +1,8 @@
 var indexOf = [].indexOf,
-  hasProp = {}.hasOwnProperty;
+  hasProp = {}.hasOwnProperty,
+  isArray = Array.isArray || function (x) {
+    return Object.prototype.toString.call(x) === '[object Array]';
+  };
 
 // variant of Object.assign but this will copy the descriptor
 export function assign(target, ...sources) {
@@ -12,7 +15,7 @@ export function assign(target, ...sources) {
   return target;
 }
 
-function _c3_merge(resolutions) {
+export function c3_merge(resolutions) {
   var sequences, candidate, exhausted, heads, i, j, len, len1, results, s, s1, s2;
   results = [];
   sequences = resolutions.slice(); // copy this array
@@ -50,7 +53,7 @@ function _c3_merge(resolutions) {
       }
     }
     if (candidate == null) {
-      throw new Error('Invalid');
+      throw new Error('Invalid resolution for sequences' + resolutions.join(', '));
     }
     results.push(candidate);
     sequences = sequences.map(function(x) {
@@ -64,7 +67,7 @@ function _c3_merge(resolutions) {
   }
 }
 
-function _c3_mro(cls) {
+export function c3_mro(cls) {
   var bases, bases_mro, concatenated, explicit, s;
   explicit = [];
   bases = cls.__bases__ != null ? cls.__bases__.slice() : [];
@@ -77,20 +80,30 @@ function _c3_mro(cls) {
       for (i = 0, len = ref.length; i < len; i++) {
         s = ref[i];
         if (s != null) {
-          results1.push(_c3_mro(s));
+          results1.push(c3_mro(s));
         }
       }
       return results1;
     })();
   }
   concatenated = [].concat([[cls]], [bases], bases_mro);
-  return _c3_merge(concatenated);
+  return c3_merge(concatenated);
 };
 
 export default function inherits (child, ...parent) {
   var exclude = ['__mro__', '__bases__'], mro, proto, superProto;
   child.__bases__ = parent;
-  child.__mro__ = _c3_mro(child);
+  child.__mro__ = c3_mro(child);
+
+  // copy the mro and assign to child prototype
+  superProto = child.__mro__.slice().map(res => assign.call(null, {}, res.prototype));
+  superProto = assign.apply(null, superProto.reverse());
+  function C3() {
+    let first = mro[1];
+    first.apply(this, arguments);
+  }
+
+  assign(C3.prototype, superProto);
 
   mro = child.__mro__.slice(1); // exclude the child for static assigment
   // Well, this copy all static method to the child
@@ -98,27 +111,25 @@ export default function inherits (child, ...parent) {
     for (var key in resolution) {
       if (hasProp.call(resolution, key) && exclude.indexOf(key) === -1) {
         exclude.push(key);
-        child[key] = resolution[key];
+        C3[key] = resolution[key];
       }
     }
   });
-  // copy the mro and assign to child prototype
-  proto = child.__mro__.slice().map(res => assign.call(null, {}, res.prototype));
-  superProto = assign.apply(null, proto.reverse());
-  child.prototype = Object.create(superProto, {
+
+  child.prototype = Object.create(C3.prototype, {
     constructor: {
       value: child,
       enumerable: false,
       writable: true,
       configurable: true
     },
-    _super: {
+    '__super__': {
       enumerable: false,
       configurable: false,
       get: function () {
-        let proto;
         if (!proto) {
           proto = {};
+          let superProto = C3.prototype;
           for (let name in superProto) {
             if (typeof superProto[name] === 'function' && hasProp.call(superProto, name)) {
               proto[name] = superProto[name].bind(this);
@@ -126,6 +137,7 @@ export default function inherits (child, ...parent) {
               proto[name] = superProto[name];
             }
           }
+          proto.constructor = C3.bind(this);
         }
         return proto;
       },
@@ -134,6 +146,10 @@ export default function inherits (child, ...parent) {
       }
     }
   });
+
+  Object.setPrototypeOf
+  ? Object.setPrototypeOf(child, C3)
+  : child.__proto__ = C3;
 };
 
 export function isinstance(obj, type) {

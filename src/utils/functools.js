@@ -1,3 +1,5 @@
+import {chain, toArray} from './itertools';
+
 export default function memoize(func) {
   var stringifyJson = JSON.stringify,
     cache = {};
@@ -32,22 +34,24 @@ export function reduce(fn, iterable, start) {
   return acc;
 }
 
-export function spawn(generatorFunc) {
-  function continuer(verb, arg) {
-    var result;
-    try {
-      result = generator[verb](arg);
-    } catch (err) {
-      return Promise.reject(err);
-    }
-    if (result.done) {
-      return result.value;
-    } else {
-      return Promise.resolve(result.value).then(onFulfilled, onRejected);
-    }
-  }
-  var generator = generatorFunc();
-  var onFulfilled = continuer.bind(continuer, "next");
-  var onRejected = continuer.bind(continuer, "throw");
-  return onFulfilled();
+/**
+* compose functions right to left
+*
+* compose(f, g, h)(x) -> f(g(h(x)))
+*/
+export function compose(f, ...fs) {
+  var rfs = toArray(chain([f], fs));
+  rfs.reverse();
+
+  return (...args) => {
+    return reduce(
+      (result, fn) => fn(result),
+      rfs.slice(1),
+      rfs[0](...args)
+    );
+  };
+}
+
+export function identity(x) {
+  return x;
 }

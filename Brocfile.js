@@ -100,8 +100,7 @@ var appJs = concat(sourceTree, {
   inputFiles: ['shopie/**/*.js'],
   outputFile: 'shopie.js',
   sourceMapConfig: { enabled: env !== 'production' },
-  headerFiles: ['libs/shim.js'],
-  footerFiles: ['libs/start.js']
+  headerFiles: ['libs/shim.js']
 });
 
 if (env === 'production') {
@@ -133,6 +132,7 @@ var vendorTree = mergeTrees([browserPolyfill, bower]);
 var vendorTree = concat(vendorTree, {
   inputFiles: [
     'bower/es6-promise/promise' + extension,
+    'external-helpers.js',
     'browser-polyfill.js',
     'bower/loader.js/loader.js',
     'bower/mithril/mithril' + extension

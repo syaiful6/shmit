@@ -10,7 +10,14 @@ export default function ValidationError(message) {
   this.stack = (new Error()).stack;
 }
 
-inherits(ValidationError, Error);
+ValidationError.prototype = Object.create(Error.prototype, {
+  constructor: {
+    value: ValidationError,
+    enumerable: false,
+    writable: true,
+    configurable: true
+  }
+})
 
 export function EmailValidator(message, code, whitelist) {
   if (message) {

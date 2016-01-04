@@ -1,13 +1,17 @@
-var defaultHeaders = {};
-export function setDefaultHeaders(func) {
-  defaultHeaders = func(defaultHeaders);
+var filters = [];
+
+export function requestPrefilter(func) {
+  if (typeof func === 'function') {
+    filters.push(func);
+  } else {
+    throw new Error('request pre filter must be a function');
+  }
 }
 
 export default function request(url, options) {
   let hash = requestOptions(url, options);
   return new Promise((resolve, reject) => {
     let req = new XMLHttpRequest();
-    req.open(hash.method, ensureSlash(hash.url), true, hash.user, hash.password);
     req.onreadystatechange = (e) => {
       if(req.readyState !== 4) {
         return;
@@ -24,12 +28,17 @@ export default function request(url, options) {
       }
     };
 
+    filters.forEach((callback) => {
+      callback(hash, req);
+    });
+
+    req.open(hash.method, ensureSlash(hash.url), true, hash.user, hash.password);
+
     if (hash.headers) {
       let headers = hash.headers;
-      for (let index in headers) {
-        let header = headers[index];
-        req.setRequestHeader(index, header);
-      }
+      Object.keys(headers).forEach((k) => {
+        req.setRequestHeader(k, headers[k]);
+      });
     }
     if (hash.method !== 'GET') {
       req.send(hash.data);
@@ -49,7 +58,7 @@ function requestOptions(url, options) {
   var hash = options || {};
   hash.url = url;
   hash.method = (hash.method).toUpperCase() || 'GET';
-  hash.headers = Object.assign(defaultHeaders, hash.headers || {});
+  hash.headers = hash.headers || {};
   return hash;
 }
 

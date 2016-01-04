@@ -9,9 +9,15 @@ iterable when they are
   can be accessed via incremental number start with 0,
   (example: object[0], object[1], ...), so Array, String, NodeList considered iterable.
 */
-
-import {reduce} from './functools';
 import isNumber from './number-type';
+
+function reduce(fn, iterable, start) {
+  var acc = start;
+  for (let elem of iterable) {
+    acc = fn(acc, elem);
+  }
+  return acc;
+}
 
 var _isArray,
   slice = [].slice,

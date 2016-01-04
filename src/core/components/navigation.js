@@ -33,9 +33,10 @@ Navigation.prototype.view = function () {
 Navigation.prototype.showModalLogin = function (e) {
   e.preventDefault();
   var modal = this.props.modal,
-    session = this.props.session;
+    onAuthenticated = this.props.onAuthenticated,
+    isLoggedin = this.props.session.isAuthenticated;
 
-  modal.show(new LoginModal({
-    session: session
+  modal.openModal(new LoginModal({
+    onAuthenticated
   }));
 };

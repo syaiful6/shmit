@@ -8,15 +8,16 @@ function normalizeExpirationTime(expiresIn) {
   }
 }
 
-export default function OauthAuthenticator (clientId, clientSecret, tokenEndpoint, tokenRevokeEndpoint) {
-  this.tokenEndpoint = tokenEndpoint;
+export default function OauthAuthenticator (clientId, clientSecret,
+  tokenEndpoint = '/o/token/', tokenRevokeEndpoint = '/o/revoke_token/') {
+  this.tokenEndpoint = tokenEndpoint ;
   this.tokenRevokeEndpoint = tokenRevokeEndpoint;
   this.clientId = clientId;
   this.clientSecret = clientSecret;
   this._refreshTokenTimeout = null;
 }
 
-OauthAuthenticator.prototype = {
+Object.assign(OauthAuthenticator.prototype, {
   restore: function (data) {
     return new Promise((resolve, reject) => {
       let now = (new Date()).getTime();
@@ -61,6 +62,13 @@ OauthAuthenticator.prototype = {
         reject(err)
       });
     });
+  },
+
+  authorize: function (data, block) {
+    var accessToken = data['access_token'];
+    if (accessToken) {
+      block('Authorization', `Bearer ${accessToken}`);
+    }
   },
 
   invalidate: function (data) {
@@ -145,4 +153,4 @@ OauthAuthenticator.prototype = {
   _dispatchSessionEvent: function (data) {
     signal.send('authenticator:updated', data);
   }
-};
+});

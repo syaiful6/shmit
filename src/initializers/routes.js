@@ -1,15 +1,23 @@
-import Navigation from '../core/components/navigation';
-import AppModal from '../core/components/app-modal';
+import Application from '../core/components/application';
+import Modal from '../core/services/modal';
 
 export default {
   name: 'routes:definition',
   after: 'application-configs:main',
   initialize(app) {
     m.startComputation();
-    var modal = m.mount(document.getElementById('sh-modal'), AppModal.component());
-    var session = app.lookup('session');
-    m.mount(document.getElementById('main-header-top'), Navigation.component({modal, session}));
-    app.register('modal', modal);
-    m.endComputation();
+    try {
+      var store = app.lookup('store');
+
+      var modal = new Modal();
+      app.register('modal', modal);
+
+      m.mount(
+        document.getElementById('sh-shop-application'),
+        Application.component({modal, store})
+      );
+    } finally {
+      m.endComputation();
+    }
   }
 };

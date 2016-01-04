@@ -1,4 +1,4 @@
-import objectAreEqual from 'shopie/utils/object-are-equal';
+import {equal as objectsAreEqual} from 'shopie/utils/object';
 import addEvent from 'shopie/utils/event';
 import signal from '../signal';
 
@@ -10,11 +10,11 @@ export default function LocalStorage() {
   this._bindStorageEvent();
 }
 
-LocalStorage.prototype = {
+Object.assign(LocalStorage.prototype, {
   _bindStorageEvent: function() {
     addEvent(window, 'storage', () => {
       let data = this.restore();
-      if (!objectAreEqual(data, this._lastData)) {
+      if (!objectsAreEqual(data, this._lastData)) {
         this._lastData = data;
         signal.send('storage:updated', data);
       }
@@ -36,4 +36,4 @@ LocalStorage.prototype = {
     _storage.removeItem(KEYSTORAGE);
     this._lastData = {};
   }
-}
+});
